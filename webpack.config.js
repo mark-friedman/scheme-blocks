@@ -30,8 +30,7 @@ module.exports = {
     mode: 'development',
     entry: {
         index: './src/index.js',
-        generator: './src/generator.js',
-        locale: './src/locale.js'
+        generator: './src/generator.js'
     },
     output: {
         path: path.resolve(__dirname, 'docs'),
