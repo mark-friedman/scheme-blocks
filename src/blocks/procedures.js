@@ -1,4 +1,5 @@
 import * as Blockly from 'blockly';
+// import {MyBlockly as Blockly} from '@mit-app-inventor/blockly-block-lexical-variables';
 
 Blockly.Blocks['procedures_lambda'] = {
   // Define an unnamed procedure with a return value.
@@ -57,3 +58,81 @@ Blockly.Blocks['procedures_lambda'] = {
   customContextMenu: Blockly.Blocks.procedures_defnoreturn.customContextMenu,
   getParameters: Blockly.Blocks.procedures_defnoreturn.getParameters,
 };
+
+Blockly.Blocks['procedures_generic_call'] = {
+  init: function() {
+    this.appendDummyInput('HEADER').appendField('call');
+    this.appendValueInput('PROC')
+        .setCheck('procedure');
+    this.horizontalParameters = true;
+    // We start off with all the connections
+    this.hasPreviousAndNext = true;
+    this.hasOutput = true;
+    this.setConnections();
+    this.setColour(230);
+    this.setTooltip('Calls a procedure!');
+    this.setStyle('procedure_blocks');
+  },
+  setConnections: function() {
+    if (this.hasPreviousAndNext) {
+      // We need to do this before potentially adding a previous connection.
+      // Otherwise setPreviousStatement() will throw an error if there is
+      // currently an output connection.  We'll add the output connection back
+      // below, if necessary
+      this.setOutput(false);
+      // Don't re-add connections that already exist
+      !this.nextConnection && this.setNextStatement(true);
+      !this.previousConnection && this.setPreviousStatement(true);
+    } else {
+      this.setNextStatement(false);
+      this.setPreviousStatement(false);
+    }
+    if (this.hasOutput) {
+      // We'd like to use setOutput() instead of what's below, but setOutput()
+      // will throw an error if we have a previous connection.
+      // this.setOutput(true);
+      this.outputConnection =
+          new Blockly.RenderedConnection(this, Blockly.connectionTypes.OUTPUT_VALUE);
+          // The following works instead of the above but uses a protected
+          // method
+          // this.makeConnection_(Blockly.connectionTypes.OUTPUT_VALUE);
+      // The following is taken from the BlockSvg.setOutput() and is necessary
+      // for proper rendering.
+      this.rendered && (this.render(),  this.bumpNeighbours())
+    }
+  },
+  onPendingConnection: function(closestConnection) {
+    console.log('Possible connection found');
+    console.log(closestConnection);
+    this.setOutput(false);
+  },
+  onchange: function(event) {
+    // We'd like to try an limit the events that we have to process even more,
+    // but a lot of different things can effect connection changes to this
+    // block. It's possible that even the following is too restrictive!
+    if (event.type === Blockly.Events.BLOCK_MOVE) {
+      // Change the shape of the block to match how it is currently connected
+      this.hasPreviousAndNext = true;
+      this.hasOutput = true;
+      if (this.outputConnection && this.outputConnection.targetBlock()) {
+        this.hasPreviousAndNext = false;
+      } else if (this.getPreviousBlock() || this.getNextBlock()) {
+        this.hasOutput = false;
+      }
+      this.setConnections();
+    }
+  },
+  domToMutation: function(xmlElement) {
+    this.hasOutput =
+        (xmlElement.getAttribute('has_output') === 'true');
+    this.hasPreviousAndNext =
+        (xmlElement.getAttribute('has_previous_and_next') === 'true');
+    this.setConnections();
+  },
+  mutationToDom: function() {
+    const xmlElement = document.createElement('mutation');
+    xmlElement.setAttribute('has_output', this.hasOutput);
+    xmlElement.setAttribute('has_previous_and_next', this.hasPreviousAndNext);
+    return xmlElement;
+  },
+}

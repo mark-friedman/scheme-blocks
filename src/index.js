@@ -26,7 +26,7 @@ import * as Blockly from 'blockly';
 
 // To use the import below (for testing local package) replace the
 // dependency in packages.json with the following:
-//      "@mit-app-inventor/blockly-block-lexical-variables": "file:../blockly-plugins/block-lexical-variables",
+//      "@mit-app-inventor/blockly-block-lexical-variables": "file:../my-blockly-plugins/blockly-plugins/block-lexical-variables",
 // block-lexical-variables/src/index.js also needs to contain the following:
 //      export const MyBlockly = Blockly;
 // import {MyBlockly as Blockly} from '@mit-app-inventor/blockly-block-lexical-variables';
@@ -34,6 +34,7 @@ import * as Blockly from 'blockly';
 import * as LexicalVariables
   from '@mit-app-inventor/blockly-block-lexical-variables';
 import './blocks/procedures';
+import './monkey-patches';
 
 document.addEventListener('DOMContentLoaded', function() {
   const workspace = Blockly.inject('blocklyDiv',
@@ -48,10 +49,13 @@ document.addEventListener('DOMContentLoaded', function() {
   workspace.removeToolboxCategoryCallback(Blockly.PROCEDURE_CATEGORY_NAME);
   const newProcCategoryCallback = (workspace) => {
     const oldXmlList = oldProcCategoryCallback(workspace);
-    const block = Blockly.utils.xml.createElement('block');
-    block.setAttribute('type', 'procedures_lambda');
-    block.setAttribute('gap', 16);
-    return [block].concat(oldXmlList);
+    const lambdaBlock = Blockly.utils.xml.createElement('block');
+    lambdaBlock.setAttribute('type', 'procedures_lambda');
+    lambdaBlock.setAttribute('gap', 16);
+    const callBlock = Blockly.utils.xml.createElement('block');
+    callBlock.setAttribute('type', 'procedures_generic_call');
+    callBlock.setAttribute('gap', 16);
+    return [lambdaBlock, callBlock].concat(oldXmlList);
   };
   workspace.registerToolboxCategoryCallback(Blockly.PROCEDURE_CATEGORY_NAME,
       newProcCategoryCallback);
