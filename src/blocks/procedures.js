@@ -75,11 +75,6 @@ Blockly.Blocks['procedures_generic_call'] = {
   },
   setConnections: function() {
     if (this.hasPreviousAndNext) {
-      // We need to do this before potentially adding a previous connection.
-      // Otherwise setPreviousStatement() will throw an error if there is
-      // currently an output connection.  We'll add the output connection back
-      // below, if necessary
-      this.setOutput(false);
       // Don't re-add connections that already exist
       !this.nextConnection && this.setNextStatement(true);
       !this.previousConnection && this.setPreviousStatement(true);
@@ -88,17 +83,11 @@ Blockly.Blocks['procedures_generic_call'] = {
       this.setPreviousStatement(false);
     }
     if (this.hasOutput) {
-      // We'd like to use setOutput() instead of what's below, but setOutput()
-      // will throw an error if we have a previous connection.
-      // this.setOutput(true);
-      this.outputConnection =
-          new Blockly.RenderedConnection(this, Blockly.connectionTypes.OUTPUT_VALUE);
-          // The following works instead of the above but uses a protected
-          // method
-          // this.makeConnection_(Blockly.connectionTypes.OUTPUT_VALUE);
-      // The following is taken from the BlockSvg.setOutput() and is necessary
-      // for proper rendering.
-      this.rendered && (this.render(),  this.bumpNeighbours())
+      if (!this.outputConnection) {
+        this.setOutput(true);
+      }
+    } else {
+      this.setOutput(false);
     }
   },
   onPendingConnection: function(closestConnection) {
@@ -110,7 +99,7 @@ Blockly.Blocks['procedures_generic_call'] = {
     // We'd like to try an limit the events that we have to process even more,
     // but a lot of different things can effect connection changes to this
     // block. It's possible that even the following is too restrictive!
-    if (event.type === Blockly.Events.BLOCK_MOVE) {
+    if (event.type === Blockly.Events.BLOCK_DRAG) {
       // Change the shape of the block to match how it is currently connected
       this.hasPreviousAndNext = true;
       this.hasOutput = true;
