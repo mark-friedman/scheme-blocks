@@ -33,8 +33,11 @@ Blockly.InsertionMarkerManager.prototype.showInsertionMarker_ = function() {
     var imConn = imBlock.getMatchingConnection(local.getSourceBlock(), local);
   } catch (e) {
     // It's possible that the number of connections on the local block has
-    // changed since insertions marker was originally created.  Let's recreate
+    // changed since the insertion marker was originally created.  Let's recreate
     // the insertion marker and try again.
+    // In theory we could probably recreate the marker block in getCandidate_(),
+    // which is called more often during the drag, but creating a block that
+    // often might be too slow, so we only do it if necessary.
     this.firstMarker_ = this.createMarkerBlock_(this.topBlock_);
     imBlock = isLastInStack ? this.lastMarker_ : this.firstMarker_;
     imConn = imBlock.getMatchingConnection(local.getSourceBlock(), local);
@@ -61,6 +64,43 @@ Blockly.InsertionMarkerManager.prototype.showInsertionMarker_ = function() {
   }
 
   this.markerConnection_ = imConn;
+};
+
+// The change is to update the available connections more often, since
+// the top blocks might change it's connections more dynamically
+/**
+ * Find the nearest valid connection, which may be the same as the current
+ * closest connection.
+ * @param {!Blockly.utils.Coordinate} dxy Position relative to drag start,
+ *     in workspace units.
+ * @return {!Object} An object containing a local connection, a closest
+ *     connection, and a radius.
+ * @private
+ */
+Blockly.InsertionMarkerManager.prototype.getCandidate_ = function(dxy) {
+  var radius = this.getStartRadius_();
+  var candidateClosest = null;
+  var candidateLocal = null;
+
+  // Note that this will be called en every move while dragging, so ir might
+  // cause slowness, especially if the block stack is large.  If so, maybe it
+  // could be made more efficient
+  this.updateAvailableConnections();
+
+  for (var i = 0; i < this.availableConnections_.length; i++) {
+    var myConnection = this.availableConnections_[i];
+    var neighbour = myConnection.closest(radius, dxy);
+    if (neighbour.connection) {
+      candidateClosest = neighbour.connection;
+      candidateLocal = myConnection;
+      radius = neighbour.radius;
+    }
+  }
+  return {
+    closest: candidateClosest,
+    local: candidateLocal,
+    radius: radius
+  };
 };
 
 /**
