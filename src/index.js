@@ -34,7 +34,6 @@ import * as Blockly from 'blockly';
 import * as LexicalVariables
   from '@mit-app-inventor/blockly-block-lexical-variables';
 import './blocks/procedures';
-import './monkey-patches';
 
 document.addEventListener('DOMContentLoaded', function() {
   const workspace = Blockly.inject('blocklyDiv',
