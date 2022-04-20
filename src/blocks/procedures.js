@@ -61,9 +61,9 @@ Blockly.Blocks['procedures_lambda'] = {
 
 Blockly.Blocks['procedures_generic_call'] = {
   init: function() {
-    this.appendDummyInput('HEADER').appendField('call');
-    this.appendValueInput('PROC')
-        .setCheck('procedure');
+    this.appendValueInput("PROC")
+        .setCheck('procedure')
+        .appendField("call");
     this.horizontalParameters = true;
     // We start off with all the connections
     this.hasPreviousAndNext = true;
