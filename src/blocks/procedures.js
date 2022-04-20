@@ -68,10 +68,12 @@ Blockly.Blocks['procedures_generic_call'] = {
     // We start off with all the connections
     this.hasPreviousAndNext = true;
     this.hasOutput = true;
+    this.itemCount = 0;
     this.setConnections();
     this.setColour(230);
     this.setTooltip('Calls a procedure!');
     this.setStyle('procedure_blocks');
+    this.setMutator(new Blockly.Mutator(['procedures_call_item']));
   },
   setConnections: function() {
     if (this.hasPreviousAndNext) {
@@ -91,8 +93,6 @@ Blockly.Blocks['procedures_generic_call'] = {
     }
   },
   onPendingConnection: function(closestConnection) {
-    console.log('Possible connection found');
-    console.log(closestConnection);
     this.setOutput(false);
   },
   onchange: function(event) {
@@ -108,20 +108,140 @@ Blockly.Blocks['procedures_generic_call'] = {
       } else if (this.getPreviousBlock() || this.getNextBlock()) {
         this.hasOutput = false;
       }
-      this.setConnections();
+      this.updateShape()
     }
   },
-  domToMutation: function(xmlElement) {
-    this.hasOutput =
-        (xmlElement.getAttribute('has_output') === 'true');
-    this.hasPreviousAndNext =
-        (xmlElement.getAttribute('has_previous_and_next') === 'true');
+  // domToMutation: function(xmlElement) {
+  //   this.hasOutput =
+  //       (xmlElement.getAttribute('has_output') === 'true');
+  //   this.hasPreviousAndNext =
+  //       (xmlElement.getAttribute('has_previous_and_next') === 'true');
+  //   this.setConnections();
+  // },
+  // mutationToDom: function() {
+  //   const xmlElement = document.createElement('mutation');
+  //   xmlElement.setAttribute('has_output', this.hasOutput);
+  //   xmlElement.setAttribute('has_previous_and_next', this.hasPreviousAndNext);
+  //   return xmlElement;
+  // },
+  saveExtraState: function() {
+    return {
+      hasOutput: this.hasOutput,
+      hasPreviousAndNext: this.hasPreviousAndNext,
+      itemCount: this.itemCount,
+    };
+  },
+  loadExtraState: function(state) {
+    this.hasPreviousAndNext = state.hasPreviousAndNext;
+    this.hasOutput = state.hasOutput;
+    this.itemCount = state.itemCount;
+    this.updateShape();
+  },
+  decompose: function(workspace) {
+    // This is a special sub-block that only gets created in the mutator UI.
+    // It acts as our "top block"
+    const topBlock = workspace.newBlock('procedures_call_container');
+    topBlock.initSvg();
+
+    // Then we add one sub-block for each item in the list.
+    let connection = topBlock.getInput('STACK').connection;
+    for (let i = 0; i < this.itemCount; i++) {
+      const itemBlock = workspace.newBlock('procedures_call_item');
+      itemBlock.initSvg();
+      connection.connect(itemBlock.previousConnection);
+      connection = itemBlock.nextConnection;
+    }
+
+    // And finally we have to return the top-block.
+    return topBlock;
+  },
+
+// The container block is the top-block returned by decompose.
+  compose: function(topBlock) {
+    // First we get the first sub-block (which represents an input on our main block).
+    let itemBlock = topBlock.getInputTargetBlock('STACK');
+
+    // Then we collect up all of the connections of on our main block that are
+    // referenced by our sub-blocks.
+    // This relates to the saveConnections hook (explained below).
+    const connections = [];
+    while (itemBlock && !itemBlock.isInsertionMarker()) {  // Ignore insertion markers!
+      connections.push(itemBlock.valueConnection_);
+      itemBlock = itemBlock.nextConnection &&
+          itemBlock.nextConnection.targetBlock();
+    }
+
+    // Then we disconnect any children where the sub-block associated with that
+    // child has been deleted/removed from the stack.
+    for (let i = 0; i < this.itemCount; i++) {
+      const connection = this.getInput('ARG' + i).connection.targetConnection;
+      if (connection && connections.indexOf(connection) === -1) {
+        connection.disconnect();
+      }
+    }
+
+    // Then we update the shape of our block (removing or adding inputs as necessary).
+    // `this` refers to the main block.
+    this.itemCount = connections.length;
+    this.updateShape();
+
+    // And finally we reconnect any child blocks.
+    for (let i = 0; i < this.itemCount; i++) {
+      Blockly.Mutator.reconnect(connections[i], this, 'ARG' + i);
+    }
+  },
+  /**
+   * Modify this block to have the correct number of inputs.
+   * @private
+   * @this {Blockly.Block}
+   */
+  updateShape: function() {
+   // Add new inputs.
+    for (let i = 0; i < this.itemCount; i++) {
+      if (!this.getInput('ARG' + i)) {
+        const input = this.appendValueInput('ARG' + i)
+            .setAlign(Blockly.ALIGN_RIGHT);
+        if (i === 0) {
+          input.appendField('with');
+        }
+      }
+    }
+    // Remove deleted inputs.
+    for (let i = this.itemCount; this.getInput('ARG' + i); i++) {
+      this.removeInput('ARG' + i);
+    }
     this.setConnections();
   },
-  mutationToDom: function() {
-    const xmlElement = document.createElement('mutation');
-    xmlElement.setAttribute('has_output', this.hasOutput);
-    xmlElement.setAttribute('has_previous_and_next', this.hasPreviousAndNext);
-    return xmlElement;
+};
+
+Blockly.Blocks['procedures_call_container'] = {
+  /**
+   * Mutator block for list container.
+   * @this {Blockly.Block}
+   */
+  init: function() {
+    this.setStyle('procedure_blocks');
+    this.appendDummyInput()
+        .appendField('arguments');
+    this.appendStatementInput('STACK');
+    this.setTooltip('Add, delete or reorder the arguments to the procedure call');
+    this.contextMenu = false;
   },
-}
+};
+
+Blockly.Blocks['procedures_call_item'] = {
+  /**
+   * Mutator block for adding items.
+   * @this {Blockly.Block}
+   */
+  init: function() {
+    this.setStyle('procedure_blocks');
+    this.appendDummyInput()
+        .appendField('arg');
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setTooltip('Argument to add to the procedure call');
+    this.contextMenu = false;
+  },
+};
+
