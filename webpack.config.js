@@ -36,6 +36,7 @@ module.exports = {
         path: path.resolve(__dirname, 'docs'),
         filename: '[name].js'
     },
+    devtool: "source-map",
     module: {
         rules: [
             {
