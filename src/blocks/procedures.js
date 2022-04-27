@@ -1,5 +1,9 @@
 import * as Blockly from 'blockly';
 // import {MyBlockly as Blockly} from '@mit-app-inventor/blockly-block-lexical-variables';
+import {FieldFlydown} from '@mit-app-inventor/blockly-block-lexical-variables';
+import {
+  FieldParameterFlydown
+} from '../../../my-blockly-plugins/blockly-plugins/block-lexical-variables/src/fields/field_parameter_flydown';
 
 Blockly.Blocks['procedures_lambda'] = {
   // Define an unnamed procedure with a return value.
@@ -59,11 +63,77 @@ Blockly.Blocks['procedures_lambda'] = {
   getParameters: Blockly.Blocks.procedures_defnoreturn.getParameters,
 };
 
-Blockly.Blocks['procedures_generic_call'] = {
+const makeStandardProcedureGetter = (procName, opt_helpUrl) => {
+  const blockType = procName + '_standard_procedure_get';
+  Blockly.Blocks[blockType] = {
+    init: function() {
+      this.appendDummyInput()
+          .appendField('get')
+          .appendField(procName);
+      this.setOutput(true, 'procedure');
+      this.setColour(230);
+      this.setTooltip(`Get ${procName} procedure.`);
+      opt_helpUrl && this.setHelpUrl(opt_helpUrl);
+      this.setStyle('procedure_blocks');
+    },
+  }
+  return blockType;
+}
+
+const makeStandardProcedureSetter = (procName, opt_helpUrl) => {
+  const blockType = procName + '_standard_procedure_set';
+  Blockly.Blocks[blockType] = {
+    init: function() {
+      this.appendValueInput('PROCEDURE')
+          .setCheck('procedure')  // This is not strictly correct, but probably useful
+          .appendField('set')
+          .appendField(procName)
+          .appendField('to');
+      this.setNextStatement(true);
+      this.setPreviousStatement(true);
+      this.setColour(230);
+      this.setTooltip(`Set ${procName} procedure.`);
+      opt_helpUrl && this.setHelpUrl(opt_helpUrl);
+      this.setStyle('procedure_blocks');
+    },
+  }
+  return blockType;
+}
+
+class StandardProcedureNameFlydown extends FieldParameterFlydown {
+  constructor(procedureName) {
+    super(procedureName, false);
+    this.getterBlockName = makeStandardProcedureGetter(procedureName);
+    this.setterBlockName = makeStandardProcedureSetter(procedureName);
+  }
+
+  flydownBlocksXML_() {
+    return `
+      <xml>
+        <block type="${this.getterBlockName}" />
+        <block type="${this.setterBlockName}" />
+      </xml>`;
+  }
+}
+
+const procedureCallBase = (isGeneric, blockName, argNames = []) => { return {
   init: function() {
-    this.appendValueInput("PROC")
-        .setCheck('procedure')
-        .appendField("call");
+    if (isGeneric) {
+      this.appendValueInput("PROC")
+          .setCheck('procedure')
+          .appendField("call");
+    } else {
+      this.appendDummyInput()
+          .appendField("call")
+          .appendField(new StandardProcedureNameFlydown(blockName))
+          .appendField('with');
+      argNames.forEach(argName => {
+        this.appendValueInput(argName)
+            .setCheck(null)
+            .setAlign(Blockly.ALIGN_RIGHT)
+            .appendField(argName);
+      });
+    }
     this.horizontalParameters = true;
     // We start off with all the connections
     this.hasPreviousAndNext = true;
@@ -73,7 +143,12 @@ Blockly.Blocks['procedures_generic_call'] = {
     this.setColour(230);
     this.setTooltip('Calls a procedure!');
     this.setStyle('procedure_blocks');
-    this.setMutator(new Blockly.Mutator(['procedures_call_item']));
+    if (isGeneric) {
+      this.setMutator(new Blockly.Mutator(['procedures_call_item']));
+    }
+  },
+  getGlobalNames: function() {
+    return !isGeneric && blockName ? [ blockName ] : [];
   },
   setConnections: function() {
     if (this.hasPreviousAndNext) {
@@ -212,7 +287,9 @@ Blockly.Blocks['procedures_generic_call'] = {
     }
     this.setConnections();
   },
-};
+}};
+
+Blockly.Blocks['procedures_generic_call'] = { ...procedureCallBase(true) }
 
 Blockly.Blocks['procedures_call_container'] = {
   /**
@@ -245,3 +322,6 @@ Blockly.Blocks['procedures_call_item'] = {
   },
 };
 
+Blockly.Blocks['procedures_standard_call'] = {
+  ...procedureCallBase(false, 'length', ['string'])
+}

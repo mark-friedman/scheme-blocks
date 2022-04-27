@@ -51,10 +51,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const lambdaBlock = Blockly.utils.xml.createElement('block');
     lambdaBlock.setAttribute('type', 'procedures_lambda');
     lambdaBlock.setAttribute('gap', 16);
-    const callBlock = Blockly.utils.xml.createElement('block');
-    callBlock.setAttribute('type', 'procedures_generic_call');
-    callBlock.setAttribute('gap', 16);
-    return [lambdaBlock, callBlock].concat(oldXmlList);
+    const genericCallBlock = Blockly.utils.xml.createElement('block');
+    genericCallBlock.setAttribute('type', 'procedures_generic_call');
+    genericCallBlock.setAttribute('gap', 16);
+    const standardCallBlock = Blockly.utils.xml.createElement('block');
+    standardCallBlock.setAttribute('type', 'procedures_standard_call');
+    standardCallBlock.setAttribute('gap', 16);
+    return [lambdaBlock, genericCallBlock, standardCallBlock].concat(oldXmlList);
   };
   workspace.registerToolboxCategoryCallback(Blockly.PROCEDURE_CATEGORY_NAME,
       newProcCategoryCallback);
