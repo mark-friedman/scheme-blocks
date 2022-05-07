@@ -1,9 +1,5 @@
 import * as Blockly from 'blockly';
-// import {MyBlockly as Blockly} from '@mit-app-inventor/blockly-block-lexical-variables';
-import {FieldFlydown} from '@mit-app-inventor/blockly-block-lexical-variables';
-import {
-  FieldParameterFlydown
-} from '../../../my-blockly-plugins/blockly-plugins/block-lexical-variables/src/fields/field_parameter_flydown';
+import {FieldParameterFlydown} from '@mit-app-inventor/blockly-block-lexical-variables';
 
 Blockly.Blocks['procedures_lambda'] = {
   // Define an unnamed procedure with a return value.
