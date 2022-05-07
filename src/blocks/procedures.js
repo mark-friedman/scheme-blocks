@@ -167,7 +167,7 @@ const procedureCallBase = (isGeneric, blockName, argNames = []) => { return {
     this.setOutput(false);
   },
   onchange: function(event) {
-    // We'd like to try an limit the events that we have to process even more,
+    // We'd like to try and limit the events that we have to process even more,
     // but a lot of different things can effect connection changes to this
     // block. It's possible that even the following is too restrictive!
     if (event.type === Blockly.Events.BLOCK_DRAG) {
@@ -182,19 +182,6 @@ const procedureCallBase = (isGeneric, blockName, argNames = []) => { return {
       this.updateShape()
     }
   },
-  // domToMutation: function(xmlElement) {
-  //   this.hasOutput =
-  //       (xmlElement.getAttribute('has_output') === 'true');
-  //   this.hasPreviousAndNext =
-  //       (xmlElement.getAttribute('has_previous_and_next') === 'true');
-  //   this.setConnections();
-  // },
-  // mutationToDom: function() {
-  //   const xmlElement = document.createElement('mutation');
-  //   xmlElement.setAttribute('has_output', this.hasOutput);
-  //   xmlElement.setAttribute('has_previous_and_next', this.hasPreviousAndNext);
-  //   return xmlElement;
-  // },
   saveExtraState: function() {
     return {
       hasOutput: this.hasOutput,
