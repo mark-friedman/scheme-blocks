@@ -1,5 +1,7 @@
 import * as Blockly from 'blockly';
 import {FieldParameterFlydown} from '@mit-app-inventor/blockly-block-lexical-variables';
+import {chameleonMixin} from './mixins';
+import {blocklyMixin} from '../utils/mixin';
 
 Blockly.Blocks['procedures_lambda'] = {
   // Define an unnamed procedure with a return value.
@@ -129,13 +131,10 @@ const procedureCallBase = (isGeneric, blockName, argNames = []) => { return {
             .setAlign(Blockly.ALIGN_RIGHT)
             .appendField(argName);
       });
+      blocklyMixin(chameleonMixin, this)
     }
     this.horizontalParameters = true;
-    // We start off with all the connections
-    this.hasPreviousAndNext = true;
-    this.hasOutput = true;
     this.itemCount = 0;
-    this.setConnections();
     this.setColour(230);
     this.setTooltip('Calls a procedure!');
     this.setStyle('procedure_blocks');
@@ -146,52 +145,12 @@ const procedureCallBase = (isGeneric, blockName, argNames = []) => { return {
   getGlobalNames: function() {
     return !isGeneric && blockName ? [ blockName ] : [];
   },
-  setConnections: function() {
-    if (this.hasPreviousAndNext) {
-      // Don't re-add connections that already exist
-      !this.nextConnection && this.setNextStatement(true);
-      !this.previousConnection && this.setPreviousStatement(true);
-    } else {
-      this.setNextStatement(false);
-      this.setPreviousStatement(false);
-    }
-    if (this.hasOutput) {
-      if (!this.outputConnection) {
-        this.setOutput(true);
-      }
-    } else {
-      this.setOutput(false);
-    }
-  },
-  onPendingConnection: function(closestConnection) {
-    this.setOutput(false);
-  },
-  onchange: function(event) {
-    // We'd like to try and limit the events that we have to process even more,
-    // but a lot of different things can effect connection changes to this
-    // block. It's possible that even the following is too restrictive!
-    if (event.type === Blockly.Events.BLOCK_DRAG) {
-      // Change the shape of the block to match how it is currently connected
-      this.hasPreviousAndNext = true;
-      this.hasOutput = true;
-      if (this.outputConnection && this.outputConnection.targetBlock()) {
-        this.hasPreviousAndNext = false;
-      } else if (this.getPreviousBlock() || this.getNextBlock()) {
-        this.hasOutput = false;
-      }
-      this.updateShape()
-    }
-  },
   saveExtraState: function() {
     return {
-      hasOutput: this.hasOutput,
-      hasPreviousAndNext: this.hasPreviousAndNext,
       itemCount: this.itemCount,
     };
   },
   loadExtraState: function(state) {
-    this.hasPreviousAndNext = state.hasPreviousAndNext;
-    this.hasOutput = state.hasOutput;
     this.itemCount = state.itemCount;
     this.updateShape();
   },
@@ -268,7 +227,6 @@ const procedureCallBase = (isGeneric, blockName, argNames = []) => { return {
     for (let i = this.itemCount; this.getInput('ARG' + i); i++) {
       this.removeInput('ARG' + i);
     }
-    this.setConnections();
   },
 }};
 
