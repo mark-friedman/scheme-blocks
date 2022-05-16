@@ -131,8 +131,8 @@ const procedureCallBase = (isGeneric, blockName, argNames = []) => { return {
             .setAlign(Blockly.ALIGN_RIGHT)
             .appendField(argName);
       });
-      blocklyMixin(chameleonMixin, this)
     }
+    blocklyMixin(chameleonMixin, this)
     this.horizontalParameters = true;
     this.itemCount = 0;
     this.setColour(230);
