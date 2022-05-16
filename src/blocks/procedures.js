@@ -114,8 +114,32 @@ class StandardProcedureNameFlydown extends FieldParameterFlydown {
   }
 }
 
+// TODO: Flesh the following out with the mutation procedures in order to create
+//       a proper Chameleon Block extension. Note that we'll have to pull all
+//       the mutation-related functions out of procedureCallBase.
+//
+// Blockly.Extensions.register(
+//     'chameleon_block_extension',
+//     function() {
+//       blocklyMixin(chameleonMixin, this);
+//     }
+// );
+//
+// Blockly.Extensions.registerMutator(
+//     'procedures_call_item',
+//     {},
+// );
+//
+// const procCallBaseJson = {
+//   'extensions': ['chameleon_block_extension',],
+//   'mutator': 'procedures_call_item',
+// }
+
 const procedureCallBase = (isGeneric, blockName, argNames = []) => { return {
   init: function() {
+    // TODO: uncomment the following line when the above extension definition
+    //       is complete
+    // this.jsonInit(procCallBaseJson);
     if (isGeneric) {
       this.appendValueInput("PROC")
           .setCheck('procedure')
