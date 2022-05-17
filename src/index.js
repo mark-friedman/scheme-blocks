@@ -33,12 +33,12 @@ import * as Blockly from 'blockly';
 
 import * as LexicalVariables
   from '@mit-app-inventor/blockly-block-lexical-variables';
-import './blocks/procedures';
+import {standardProcedureToolboxJson} from './blocks/procedures';
 
 document.addEventListener('DOMContentLoaded', function() {
   const workspace = Blockly.inject('blocklyDiv',
       {
-        toolbox: document.getElementById('toolbox'),
+        toolbox: standardProcedureToolboxJson,
         media: 'media/',
       });
 
@@ -54,10 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const genericCallBlock = Blockly.utils.xml.createElement('block');
     genericCallBlock.setAttribute('type', 'procedures_generic_call');
     genericCallBlock.setAttribute('gap', 16);
-    const standardCallBlock = Blockly.utils.xml.createElement('block');
-    standardCallBlock.setAttribute('type', 'procedures_standard_call');
-    standardCallBlock.setAttribute('gap', 16);
-    return [lambdaBlock, genericCallBlock, standardCallBlock].concat(oldXmlList);
+    return [lambdaBlock, genericCallBlock].concat(oldXmlList);
   };
   workspace.registerToolboxCategoryCallback(Blockly.PROCEDURE_CATEGORY_NAME,
       newProcCategoryCallback);

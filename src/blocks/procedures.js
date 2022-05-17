@@ -287,6 +287,53 @@ Blockly.Blocks['procedures_call_item'] = {
   },
 };
 
-Blockly.Blocks['procedures_standard_call'] = {
+export const standardProcedureToolboxJson = {
+  "kind": "categoryToolbox",
+  "contents": [
+    {
+      "kind": "category",
+      "name": "String",
+      "contents": [
+        {
+          "kind": "block",
+          "type": "procedures_length"
+        },
+      ]
+    },
+    {
+      "kind": "category",
+      "name": "Variables",
+      "contents": [
+        {
+          "kind": "block",
+          "type": "global_declaration"
+        },
+        {
+          "kind": "block",
+          "type": "local_declaration_statement"
+        },
+        {
+          "kind": "block",
+          "type": "local_declaration_expression"
+        },
+        {
+          "kind": "block",
+          "type": "lexical_variable_get"
+        },
+        {
+          "kind": "block",
+          "type": "lexical_variable_set"
+        },
+      ]
+    },
+    {
+      "kind": "category",
+      "name": "Functions",
+      "custom": "PROCEDURE"
+    }
+  ],
+};
+
+Blockly.Blocks['procedures_length'] = {
   ...procedureCallBase(false, 'length', ['string'])
 }
