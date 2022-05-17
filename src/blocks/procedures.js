@@ -300,7 +300,7 @@ const procedurePrefix = 'procedures_';
 const genProcedureBlockType =
         procedureName => `${procedurePrefix}${procedureName}`
 
-const genToolbox = (procedures) => {
+const genToolboxProcedures = (procedures) => {
   return procedures.map((procedure) => {
     return {
       type: genProcedureBlockType(procedure.name),
@@ -315,7 +315,7 @@ export const standardProcedureToolboxJson = {
     {
       kind: 'category',
       name: 'String',
-      contents: genToolbox(standardProcedures),
+      contents: genToolboxProcedures(standardProcedures),
     },
     {
       kind: 'category',
