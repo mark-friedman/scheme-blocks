@@ -287,53 +287,76 @@ Blockly.Blocks['procedures_call_item'] = {
   },
 };
 
+const standardProcedures = [
+  {
+    'name': 'length',
+    'category': 'String',
+    'argNames': ['string'],
+  }
+];
+
+const procedurePrefix = 'procedures_';
+
+const genProcedureBlockType =
+        procedureName => `${procedurePrefix}${procedureName}`
+
+const genToolbox = (procedures) => {
+  return procedures.map((procedure) => {
+    return {
+      type: genProcedureBlockType(procedure.name),
+      kind: 'block',
+    }
+  });
+}
+
 export const standardProcedureToolboxJson = {
-  "kind": "categoryToolbox",
-  "contents": [
+  kind: 'categoryToolbox',
+  contents: [
     {
-      "kind": "category",
-      "name": "String",
-      "contents": [
+      kind: 'category',
+      name: 'String',
+      contents: genToolbox(standardProcedures),
+    },
+    {
+      kind: 'category',
+      name: 'Variables',
+      contents: [
         {
-          "kind": "block",
-          "type": "procedures_length"
+          kind: 'block',
+          type: 'global_declaration'
+        },
+        {
+          kind: 'block',
+          type: 'local_declaration_statement'
+        },
+        {
+          kind: 'block',
+          type: 'local_declaration_expression'
+        },
+        {
+          kind: 'block',
+          type: 'lexical_variable_get'
+        },
+        {
+          kind: 'block',
+          type: 'lexical_variable_set'
         },
       ]
     },
     {
-      "kind": "category",
-      "name": "Variables",
-      "contents": [
-        {
-          "kind": "block",
-          "type": "global_declaration"
-        },
-        {
-          "kind": "block",
-          "type": "local_declaration_statement"
-        },
-        {
-          "kind": "block",
-          "type": "local_declaration_expression"
-        },
-        {
-          "kind": "block",
-          "type": "lexical_variable_get"
-        },
-        {
-          "kind": "block",
-          "type": "lexical_variable_set"
-        },
-      ]
-    },
-    {
-      "kind": "category",
-      "name": "Functions",
-      "custom": "PROCEDURE"
+      kind: 'category',
+      name: 'Functions',
+      custom: 'PROCEDURE'
     }
   ],
 };
 
-Blockly.Blocks['procedures_length'] = {
-  ...procedureCallBase(false, 'length', ['string'])
+const genStandardProcedureBlocks = (procedures) => {
+  procedures.forEach((procedure) => {
+    Blockly.Blocks[genProcedureBlockType(procedure.name)] = {
+      ...procedureCallBase(false, procedure.name, procedure.argNames),
+    };
+  });
 }
+
+genStandardProcedureBlocks(standardProcedures);
