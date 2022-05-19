@@ -18,7 +18,22 @@ export function mixin(mixinObj, targetObj) {
     let targetPropertyValue = targetObj[mixinProperty];
     if (typeof mixinPropertyValue === 'function') {
       if (typeof targetPropertyValue === 'function') {
+        // In next line we subtract 1 for the targetObj parameter which is added
+        // by bind() below
+        const mixinArity = mixinPropertyValue.length - 1;
+        const targetArity = targetPropertyValue.length;
+        if (mixinArity !== targetArity) {
+          // We can have different arities but we should at least warn about it!
+          console.warn(`Mixin function ${mixinProperty} has ${mixinArity}` +
+              ` parameters (minus the initial target object parameter) but` +
+              ` target function has ${targetArity}.`);
+        }
         targetPropertyValue= targetPropertyValue.bind(targetObj);
+      } else {
+        // It's ok for target property to not be a function, but we should warn
+        // about it.
+        console.warn(`Mixin property ${mixinProperty} is a function but` +
+            ` the corresponding target property is not.`);
       }
       // The mixin function will be called with the original target property
       // as the first argument.  Note that it could be null and might not be
@@ -26,10 +41,14 @@ export function mixin(mixinObj, targetObj) {
       targetObj[mixinProperty] =
           mixinPropertyValue.bind(targetObj, targetPropertyValue);
     } else {
+      if (typeof targetPropertyValue === 'function') {
+        console.warn(`Mixin property ${mixinProperty} is not a function` +
+            ` but the corresponding target property is.`);
+      }
       targetObj[mixinProperty] = mixinPropertyValue;
     }
   }
-};
+}
 
 /**
  * Copy properties from source object to a target object.
