@@ -12,6 +12,25 @@
 
         #blocklyDiv {
             height: 100%;
+            width: 50%;
+        }
+
+        .split {
+            height: 100%;
+            width: 50%;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            overflow-x: hidden;
+            padding-top: 20px;
+        }
+
+        .left {
+            left: 0;
+        }
+
+        .right {
+            right: 0;
         }
 
         #blocklyButton {
@@ -21,10 +40,13 @@
 </head>
 
 <body>
-    <nav>
-        <button id="blocklyButton">Generate Code</button>
-    </nav>
-    <div id='blocklyDiv'>
+<!--    <nav>-->
+<!--        <button id="blocklyButton">Generate Code</button>-->
+<!--    </nav>-->
+    <div id='blocklyDiv' class="split left">
+    </div>
+    <div class="split right">
+        <iframe id="scheme-frame" src="../try-gambit/index.html" width="100%" height="100%" ></iframe>
     </div>
 
     <script type='text/javascript' src='./index.js'></script>
