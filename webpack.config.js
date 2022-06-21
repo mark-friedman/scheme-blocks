@@ -43,27 +43,31 @@ module.exports = {
                 // test: /(blockly\/.*\.js)$/,
                 test: /\.js$/,
                 enforce: "pre",
-                // use: ["source-map-loader"],
-                use: [require.resolve('source-map-loader')],
+                use: ["source-map-loader"],
+                // use: [require.resolve('source-map-loader')],
             },
         ],
     },
+    // Ignore spurious warnings from source-map-loader
+    // It can't find source maps for some Closure modules and that is expected
+    ignoreWarnings: [/Failed to parse source map/],
     plugins: [
         new webpack.optimize.ModuleConcatenationPlugin(),
-        new CopyPlugin([
-            {
-                from: path.resolve(__dirname, 'public'),
-                to: path.resolve(__dirname, 'docs')
+        new CopyPlugin({
+                patterns: [
+                    {
+                        from: path.resolve(__dirname, 'public'),
+                        to: path.resolve(__dirname, 'docs')
+                    },
+                    // Copy over media resources from the Blockly package
+                    {
+                        from: path.resolve(__dirname, './node_modules/blockly/media'),
+                        to: path.resolve(__dirname, 'docs/media')
+                    },
+                ]
             }
-        ]),
-        // Copy over media resources from the Blockly package
-        new CopyPlugin([
-            {
-                from: path.resolve(__dirname, './node_modules/blockly/media'),
-                to: path.resolve(__dirname, 'docs/media')
-            }
-        ])
-    ],
+        ),
+   ],
     devServer: {
         port: 3000
     }
