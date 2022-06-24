@@ -22,3 +22,13 @@
 5. Build a version of App Inventor that uses Scheme Blocks.  This would reuse as much of the existing App Inventor code base as possible.  Note, though, that it will probably not be possible to import/convert existing App Inventor projects to Scheme. This could be viewed as a bug or a feature ;-)
 
 6. Think about the pedagogical implications of having the above and perhaps design curricula.
+
+### Running
+
+```
+npm start
+```
+
+_Note that right now, running this with the associated Scheme IDE requires a local installion of
+a modified [Gambit Scheme](https://gambitscheme.org/) system.  Eventually there will be some procedure
+doing that documented (and maybe even automated!) here_
