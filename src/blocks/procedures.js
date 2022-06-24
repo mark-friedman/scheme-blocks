@@ -368,7 +368,7 @@ const genStandardProcedureCode = (procedures) => {
   procedures.forEach((procedure) => {
     schemeCodeGenerator[genProcedureBlockType(procedure.name)] = (block) => {
       const argVals = procedure.argNames.map((argName) => {
-        return schemeCodeGenerator.valueToCode(block, argName, 1);
+        return schemeCodeGenerator.valueToCode(block, argName, 10);
       })
       const argValStr = argVals.join(' ');
       const codeStr = `(${procedure.name} ${argValStr})`;
