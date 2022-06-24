@@ -33,7 +33,7 @@ import * as Blockly from 'blockly';
 
 import * as LexicalVariables
   from '@mit-app-inventor/blockly-block-lexical-variables';
-import {standardProcedureToolboxJson} from './blocks/procedures';
+import {standardProcedureToolboxJson, schemeCodeGenerator} from './blocks/procedures';
 
 document.addEventListener('DOMContentLoaded', function() {
   const workspace = Blockly.inject('blocklyDiv',
@@ -62,7 +62,14 @@ document.addEventListener('DOMContentLoaded', function() {
   // Load lexical variable plugin
   LexicalVariables.init(workspace);
 
-  const lang = 'JavaScript';
+  workspace.addChangeListener((event) => {
+    if (!event.isUiEvent) {
+      const code = schemeCodeGenerator.workspaceToCode(workspace);
+      console.log(code);
+    }
+  })
+
+  const lang = 'Scheme';
   const button = document.getElementById('blocklyButton');
   button.addEventListener('click', function() {
     alert('Check the console for the generated output.');
