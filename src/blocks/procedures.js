@@ -289,7 +289,7 @@ Blockly.Blocks['procedures_call_item'] = {
 
 const standardProcedures = [
   {
-    'name': 'length',
+    'name': 'string-length',
     'category': 'String',
     'argNames': ['string'],
   }
