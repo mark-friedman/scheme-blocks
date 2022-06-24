@@ -360,3 +360,23 @@ const genStandardProcedureBlocks = (procedures) => {
 }
 
 genStandardProcedureBlocks(standardProcedures);
+
+export const schemeCodeGenerator = new Blockly.Generator('Scheme');
+console.log(schemeCodeGenerator);
+
+const genStandardProcedureCode = (procedures) => {
+  procedures.forEach((procedure) => {
+    schemeCodeGenerator[genProcedureBlockType(procedure.name)] = (block) => {
+      const argVals = procedure.argNames.map((argName) => {
+        return schemeCodeGenerator.valueToCode(block, argName, 1);
+      })
+      const argValStr = argVals.join(' ');
+      const codeStr = `(${procedure.name} ${argValStr})`;
+      console.log(codeStr);
+      // If this block has an outputConnection then it is in a value context, else it is in a statement context
+      return block.outputConnection ? [codeStr, 1] : codeStr;
+    }
+  });
+}
+
+genStandardProcedureCode(standardProcedures);
