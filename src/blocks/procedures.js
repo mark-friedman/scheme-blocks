@@ -298,10 +298,15 @@ Blockly.Blocks['procedures_call_item'] = {
 
 const standardProcedures = [
   {
-    'name': 'string-length',
-    'category': 'String',
-    'argNames': ['string'],
-  }
+    name: 'string-length',
+    category: 'String',
+    argNames: ['string'],
+  },
+  {
+    name: 'length',
+    category: 'List',
+    argNames:  ['list',]
+  },
 ];
 
 const procedurePrefix = 'procedures_';
@@ -309,23 +314,9 @@ const procedurePrefix = 'procedures_';
 const genProcedureBlockType =
         procedureName => `${procedurePrefix}${procedureName}`
 
-const genToolboxProcedures = (procedures) => {
-  return procedures.map((procedure) => {
-    return {
-      type: genProcedureBlockType(procedure.name),
-      kind: 'block',
-    }
-  });
-}
-
 export const standardProcedureToolboxJson = {
   kind: 'categoryToolbox',
   contents: [
-    {
-      kind: 'category',
-      name: 'String',
-      contents: genToolboxProcedures(standardProcedures),
-    },
     {
       kind: 'category',
       name: 'Variables',
@@ -359,6 +350,27 @@ export const standardProcedureToolboxJson = {
     }
   ],
 };
+
+const genToolboxProcedures = (procedures) => {
+  const allCategories = new Set(standardProcedures.map(proc => proc.category));
+  // TODO: We might want to impose some ordering of the categories
+  allCategories.forEach((cat) => {
+    const proceduresInCategory = standardProcedures.filter(proc => proc.category === cat);
+    const toolboxContentsForCategory = proceduresInCategory.map((procedure) => {
+      return {
+        type: genProcedureBlockType(procedure.name),
+        kind: 'block',
+      }
+    });
+    standardProcedureToolboxJson.contents.splice(0,0,{
+      kind: 'category',
+      name: cat,
+      contents: toolboxContentsForCategory,
+    })
+  })
+}
+
+genToolboxProcedures(standardProcedures);
 
 const genStandardProcedureBlocks = (procedures) => {
   procedures.forEach((procedure) => {
