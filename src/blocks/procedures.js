@@ -75,6 +75,10 @@ const makeStandardProcedureGetter = (procName, opt_helpUrl) => {
       this.setStyle('procedure_blocks');
     },
   }
+  schemeCodeGenerator[blockType] = (block) => {
+    const codeStr = procName;
+    return block.outputConnection ? [codeStr, 1] : codeStr;
+  }
   return blockType;
 }
 
@@ -94,6 +98,11 @@ const makeStandardProcedureSetter = (procName, opt_helpUrl) => {
       opt_helpUrl && this.setHelpUrl(opt_helpUrl);
       this.setStyle('procedure_blocks');
     },
+  }
+  schemeCodeGenerator[blockType] = (block) => {
+    const valStr = schemeCodeGenerator.valueToCode(block, 'PROCEDURE', 10)
+    const codeStr = `(set! ${procName} ${valStr})`;
+    return block.outputConnection ? [codeStr, 1] : codeStr;
   }
   return blockType;
 }
