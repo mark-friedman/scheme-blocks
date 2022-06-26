@@ -13,11 +13,11 @@
 
    * This could also, potentially, include an interpreter, maybe triggered by the addition of a do-it capability.
 
-4. Design and build a blocks-based Scheme IDE, using Blockly and some existing Scheme interpreter.  This might look quite different than “standard” Blockly, since, among other things:
+4. Design and build a blocks-based Scheme IDE, using Blockly and some existing Scheme interpreter.  This might look quite different from “standard” Blockly, since, among other things:
 
    * Standard Blockly doesn't have a good Scheme-y way of  dealing with the fundamental similarity of primitive functions and user-defined functions.
    
-   * The straightforward way to represent lambdas might be non-optimal.  Consider, for example, if we wanted to handle tham similarly to Snap!’s grey rings.
+   * The straightforward way to represent lambdas might be non-optimal.  Consider, for example, if we wanted to handle them similarly to Snap!’s grey rings.
 
 5. Build a version of [App Inventor](https://appinventor.mit.edu) that uses Scheme Blocks.  This would reuse as much of the existing App Inventor code base as possible.  Note, though, that it will probably not be possible to import/convert existing App Inventor projects to Scheme. This could be viewed as a bug or a feature ;-)
 
@@ -29,6 +29,6 @@
 npm start
 ```
 
-_Note that right now, running this with the associated Scheme IDE requires a local installion of
+_Note that right now, running this with the associated Scheme IDE requires a local installation of
 a modified [Gambit Scheme](https://gambitscheme.org/) system.  Eventually there will be some procedure
 doing that documented (and maybe even automated!) here_
