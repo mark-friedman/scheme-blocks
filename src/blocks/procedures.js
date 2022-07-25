@@ -299,12 +299,12 @@ Blockly.Blocks['procedures_call_item'] = {
 const standardProcedures = [
   {
     name: 'string-length',
-    category: 'String',
+    category: 'Strings',
     argNames: ['string'],
   },
   {
     name: 'length',
-    category: 'List',
+    category: 'Lists',
     argNames:  ['list',]
   },
 ];
@@ -317,6 +317,16 @@ const genProcedureBlockType =
 export const standardProcedureToolboxJson = {
   kind: 'categoryToolbox',
   contents: [
+    {
+      kind: 'category',
+      name: 'Strings',
+      contents: [
+        {
+          kind: 'block',
+          type: 'text'
+        }
+      ]
+    },
     {
       kind: 'category',
       name: 'Variables',
@@ -362,11 +372,17 @@ const genToolboxProcedures = (procedures) => {
         kind: 'block',
       }
     });
-    standardProcedureToolboxJson.contents.splice(0,0,{
-      kind: 'category',
-      name: cat,
-      contents: toolboxContentsForCategory,
-    })
+    const existingCategory =
+        standardProcedureToolboxJson.contents.find(obj => obj.kind === 'category' && obj.name === cat);
+    if (existingCategory) {
+      existingCategory.contents.splice(0, 0, ...toolboxContentsForCategory);
+    } else {
+      standardProcedureToolboxJson.contents.splice(0,0,{
+        kind: 'category',
+        name: cat,
+        contents: toolboxContentsForCategory,
+      })
+    }
   })
 }
 
