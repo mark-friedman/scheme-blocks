@@ -1,7 +1,7 @@
 /**
  * @license
  *
- * Copyright 2019 Google LLC
+ * Copyright 2021 Mark Friedman
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,8 @@
  */
 
 /**
- * @fileoverview Example of including Blockly with using Webpack with
- *               defaults: (English lang & JavaScript generator).
- * @author samelh@google.com (Sam El-Husseini)
+ * @fileoverview Main JavaScript file for the Scheme Blocks IDE
+ * @author mark.friedman@gmail.com (Mark Friedman)
  */
 
 import * as Blockly from 'blockly';
