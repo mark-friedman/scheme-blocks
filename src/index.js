@@ -23,13 +23,6 @@
 
 import * as Blockly from 'blockly';
 
-// To use the import below (for testing local package) replace the
-// dependency in packages.json with the following:
-//      "@mit-app-inventor/blockly-block-lexical-variables": "file:../my-blockly-plugins/blockly-plugins/block-lexical-variables",
-// block-lexical-variables/src/index.js also needs to contain the following:
-//      export const MyBlockly = Blockly;
-// import {MyBlockly as Blockly} from '@mit-app-inventor/blockly-block-lexical-variables';
-
 import * as LexicalVariables
   from '@mit-app-inventor/blockly-block-lexical-variables';
 import {standardProcedureToolboxJson, schemeCodeGenerator} from './blocks/procedures';
