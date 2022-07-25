@@ -32,8 +32,10 @@ export function mixin(mixinObj, targetObj) {
       } else {
         // It's ok for target property to not be a function, but we should warn
         // about it.
-        console.warn(`Mixin property ${mixinProperty} is a function but` +
-            ` the corresponding target property is not.`);
+        if (targetPropertyValue !== undefined) {
+          console.warn(`Mixin property ${mixinProperty} is a function but` +
+              ` the corresponding target property is not.`);
+        }
       }
       // The mixin function will be called with the original target property
       // as the first argument.  Note that it could be null and might not be
