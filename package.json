@@ -9,8 +9,8 @@
     "build": "webpack"
   },
   "dependencies": {
-    "@mit-app-inventor/blockly-block-lexical-variables": "^0.0.11",
-    "blockly": "^8.0.0"
+    "@mit-app-inventor/blockly-block-lexical-variables": "^0.0.12",
+    "blockly": "^9.0.0"
   },
   "devDependencies": {
     "copy-webpack-plugin": "^11.0.0",
