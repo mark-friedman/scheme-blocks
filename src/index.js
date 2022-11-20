@@ -54,12 +54,13 @@ document.addEventListener('DOMContentLoaded', function() {
   // Load lexical variable plugin
   LexicalVariables.init(workspace);
 
-  workspace.addChangeListener((event) => {
-    if (!event.isUiEvent) {
-      const code = schemeCodeGenerator.workspaceToCode(workspace);
-      console.log(code);
-    }
-  })
+  // TODO: Uncomment the code below to show the generated code.
+  // workspace.addChangeListener((event) => {
+  //   if (!event.isUiEvent) {
+  //     const code = schemeCodeGenerator.workspaceToCode(workspace);
+  //     console.log(code);
+  //   }
+  // })
 
   const lang = 'Scheme';
   const button = document.getElementById('blocklyButton');
