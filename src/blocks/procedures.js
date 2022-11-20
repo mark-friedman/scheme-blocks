@@ -172,7 +172,7 @@ const procedureCallBase = (isGeneric, blockName, argNames = []) => { return {
     this.setTooltip('Calls a procedure!');
     this.setStyle('procedure_blocks');
     if (isGeneric) {
-      this.setMutator(new Blockly.Mutator(['procedures_call_item']));
+      this.setMutator(new Blockly.Mutator(['procedures_call_item'], this));
     }
   },
   getGlobalNames: function() {
