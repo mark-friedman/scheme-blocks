@@ -263,7 +263,7 @@ const procedureCallBase = (isGeneric, blockName, argNames = []) => { return {
   },
 }};
 
-Blockly.Blocks['procedures_generic_call'] = { ...procedureCallBase(true) }
+Blockly.Blocks['procedures_generic_call'] = procedureCallBase(true)
 
 Blockly.Blocks['procedures_call_container'] = {
   /**
@@ -390,9 +390,8 @@ genToolboxProcedures(standardProcedures);
 
 const genStandardProcedureBlocks = (procedures) => {
   procedures.forEach((procedure) => {
-    Blockly.Blocks[genProcedureBlockType(procedure.name)] = {
-      ...procedureCallBase(false, procedure.name, procedure.argNames),
-    };
+    Blockly.Blocks[genProcedureBlockType(procedure.name)] =
+        procedureCallBase(false, procedure.name, procedure.argNames);
   });
 }
 
