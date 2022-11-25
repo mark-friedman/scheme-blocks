@@ -55,6 +55,7 @@ export const chameleonMixin = {
     };
   },
   loadExtraState: function(origLoadExtraState, state) {
+    origLoadExtraState.call(this, state);
     this.hasPreviousAndNext = state.hasPreviousAndNext;
     this.hasOutput = state.hasOutput;
     this.updateShape();
