@@ -30,5 +30,7 @@ npm start
 ```
 
 _Note that right now, running this with the associated Scheme IDE requires a local installation of
-a modified [Gambit Scheme](https://gambitscheme.org/) system.  Eventually there will be some procedure
-doing that documented (and maybe even automated!) here_
+a modified browser-based REPL for [Gambit Scheme](https://gambitscheme.org/).  It is a modified version of [this code](https://github.com/gambit/gambit/tree/master/contrib/try).
+The "real" source for the modified code is [here](https://github.com/mark-friedman/gambit/tree/scheme-blocks-changes/contrib/try),
+which is a fork (and branch) of the main Gambit repo.  That directory is copied into this repo, but should probably be
+a submodule (or something)._
