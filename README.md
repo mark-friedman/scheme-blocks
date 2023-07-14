@@ -23,14 +23,22 @@
 
 6. Think about the pedagogical implications of having the above and perhaps design curricula.
 
-### Running
+### The IDE (such as it is)
 
-```
-npm start
-```
+We have the beginnings of a Scheme IDE, which is a web app that uses Blockly to create Scheme programs.
+It uses (or at least will use) the [Gambit Scheme](https://gambitscheme.org/) interpreter to run the programs.
+Right now it just embeds the Gambit REPL and the Gambit VM (which allows for the creation of "files", which
+are stored in the browser's local storage) in an iframe.
 
 _Note that right now, running this with the associated Scheme IDE requires a local installation of
 a modified browser-based REPL for [Gambit Scheme](https://gambitscheme.org/).  It is a modified version of [this code](https://github.com/gambit/gambit/tree/master/contrib/try).
 The "real" source for the modified code is [here](https://github.com/mark-friedman/gambit/tree/scheme-blocks-changes/contrib/try),
 which is a fork (and branch) of the main Gambit repo.  That directory is copied into this repo, but should probably be
 a submodule (or something)._
+
+### Running the IDE
+
+```
+npm start
+```
+
