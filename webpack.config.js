@@ -53,21 +53,40 @@ module.exports = {
     plugins: [
         new webpack.optimize.ModuleConcatenationPlugin(),
         new CopyPlugin({
-                patterns: [
-                    {
-                        from: path.resolve(__dirname, 'public'),
-                        to: path.resolve(__dirname, 'docs')
-                    },
-                    // Copy over media resources from the Blockly package
-                    {
-                        from: path.resolve(__dirname, './node_modules/blockly/media'),
-                        to: path.resolve(__dirname, 'docs/media')
-                    },
-                ]
-            }
+            patterns: [
+                {
+                    from: path.resolve(__dirname, 'public'),
+                    to: path.resolve(__dirname, 'docs')
+                },
+                // Copy over media resources from the Blockly package
+                {
+                    from: path.resolve(__dirname, './node_modules/blockly/media'),
+                    to: path.resolve(__dirname, 'docs/media')
+                },
+                // Copy tests for browser-based testing
+                {
+                    from: path.resolve(__dirname, 'tests'),
+                    to: path.resolve(__dirname, 'docs/tests')
+                },
+                // Copy scheme-js library files
+                {
+                    from: path.resolve(__dirname, 'libs'),
+                    to: path.resolve(__dirname, 'docs/libs')
+                },
+                // Copy src for browser-based tests to import from
+                {
+                    from: path.resolve(__dirname, 'src'),
+                    to: path.resolve(__dirname, 'docs/src')
+                },
+            ]
+        }
         ),
-   ],
+    ],
     devServer: {
-        port: 3000
+        port: 3000,
+        static: [
+            { directory: path.resolve(__dirname, 'public') },
+            { directory: __dirname }, // Serve project root for /src access
+        ],
     }
 };

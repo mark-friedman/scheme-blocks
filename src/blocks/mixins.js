@@ -1,13 +1,13 @@
-import * as Blockly from 'blockly/core';
+import * as Blockly from 'blockly';
 
 export const chameleonMixin = {
-  init: function(origInit) {
+  init: function (origInit) {
     // We start off with all the connections
     this.hasPreviousAndNext = true;
     this.hasOutput = true;
     this.setConnections();
   },
-  setConnections: function(origSetConnections) {
+  setConnections: function (origSetConnections) {
     origSetConnections && origSetConnections();
     if (this.hasPreviousAndNext) {
       // Don't re-add connections that already exist
@@ -25,11 +25,11 @@ export const chameleonMixin = {
       this.setOutput(false);
     }
   },
-  onPendingConnection: function(origOnPendingConnections, closestConnection) {
+  onPendingConnection: function (origOnPendingConnections, closestConnection) {
     origOnPendingConnections && origOnPendingConnections(closestConnection);
     this.setOutput(false);
   },
-  onchange: function(origOnChange, event) {
+  onchange: function (origOnChange, event) {
     origOnChange && origOnChange(event);
     // We'd like to try and limit the events that we have to process even more,
     // but a lot of different things can effect connection changes to this
@@ -43,10 +43,10 @@ export const chameleonMixin = {
       } else if (this.getPreviousBlock() || this.getNextBlock()) {
         this.hasOutput = false;
       }
-      this.updateShape()
+      this.updateShape();
     }
   },
-  saveExtraState: function(origSaveExtraState) {
+  saveExtraState: function (origSaveExtraState) {
     const origExtraState = origSaveExtraState ? origSaveExtraState() : {};
     return {
       ...origExtraState,
@@ -54,14 +54,14 @@ export const chameleonMixin = {
       hasPreviousAndNext: this.hasPreviousAndNext,
     };
   },
-  loadExtraState: function(origLoadExtraState, state) {
+  loadExtraState: function (origLoadExtraState, state) {
     origLoadExtraState.call(this, state);
     this.hasPreviousAndNext = state.hasPreviousAndNext;
     this.hasOutput = state.hasOutput;
     this.updateShape();
   },
-  updateShape: function(origUpdateShape) {
+  updateShape: function (origUpdateShape) {
     origUpdateShape && origUpdateShape();
     this.setConnections();
   },
-}
+};

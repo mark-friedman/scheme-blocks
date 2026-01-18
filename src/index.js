@@ -22,21 +22,22 @@
  */
 
 import * as Blockly from 'blockly';
+import { LexicalVariablesPlugin } from '@mit-app-inventor/blockly-block-lexical-variables';
+import { standardProcedureToolboxJson, schemeCodeGenerator } from './blocks/procedures';
 
-import * as LexicalVariables
-  from '@mit-app-inventor/blockly-block-lexical-variables';
-import {standardProcedureToolboxJson, schemeCodeGenerator} from './blocks/procedures';
+document.addEventListener('DOMContentLoaded', function () {
+  // Expose globals for testing and future Scheme interop
+  window.Blockly = Blockly;
+  window.schemeCodeGenerator = schemeCodeGenerator;
 
-document.addEventListener('DOMContentLoaded', function() {
-  const workspace = Blockly.inject('blocklyDiv',
-      {
-        toolbox: standardProcedureToolboxJson,
-        media: 'media/',
-      });
+  const workspace = Blockly.inject('blocklyDiv', {
+    toolbox: standardProcedureToolboxJson,
+    media: 'media/',
+  });
 
   // Set up lambda block in Procedure toolbox category
   const oldProcCategoryCallback =
-      workspace.getToolboxCategoryCallback(Blockly.PROCEDURE_CATEGORY_NAME);
+    workspace.getToolboxCategoryCallback(Blockly.PROCEDURE_CATEGORY_NAME);
   workspace.removeToolboxCategoryCallback(Blockly.PROCEDURE_CATEGORY_NAME);
   const newProcCategoryCallback = (workspace) => {
     const oldXmlList = oldProcCategoryCallback(workspace);
@@ -49,10 +50,10 @@ document.addEventListener('DOMContentLoaded', function() {
     return [lambdaBlock, genericCallBlock].concat(oldXmlList);
   };
   workspace.registerToolboxCategoryCallback(Blockly.PROCEDURE_CATEGORY_NAME,
-      newProcCategoryCallback);
+    newProcCategoryCallback);
 
   // Load lexical variable plugin
-  LexicalVariables.init(workspace);
+  LexicalVariablesPlugin.init(workspace);
 
   // TODO: Uncomment the code below to show the generated code.
   // workspace.addChangeListener((event) => {
