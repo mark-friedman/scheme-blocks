@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Block Definition Tests</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+
+        h1 {
+            color: #569cd6;
+        }
+
+        h2 {
+            color: #4ec9b0;
+            margin-top: 30px;
+        }
+
+        .pass {
+            color: #4ec9b0;
+            margin: 4px 0;
+        }
+
+        .fail {
+            color: #f44747;
+            margin: 4px 0;
+        }
+
+        .summary-pass {
+            color: #4ec9b0;
+            font-weight: bold;
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+
+        .summary-fail {
+            color: #f44747;
+            font-weight: bold;
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+
+        #results {
+            margin-top: 20px;
+        }
+
+        #blocklyDiv {
+            width: 1px;
+            height: 1px;
+            visibility: hidden;
+            position: absolute;
+        }
+
+        pre {
+            background: #2d2d2d;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+
+        code {
+            color: #ce9178;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🧪 Block Definition Tests</h1>
+    <p>Testing Blockly block definitions and code generation.</p>
+    <p><em>These tests run against the webpack-bundled application code.</em></p>
+    <div id="results"></div>
+    <div id="blocklyDiv"></div>
+
+    <!-- Load the webpack bundle which includes Blockly and all block definitions -->
+    <script src="/index.js"></script>
+
+    <script>
+        // Simple test harness for browser
+        class TestHarness {
+            constructor(name) {
+                this.name = name;
+                this.tests = [];
+                this.results = { passed: 0, failed: 0, errors: [] };
+            }
+            test(desc, fn) { this.tests.push({ desc, fn }); }
+            assert(cond, msg = 'Assertion failed') { if (!cond) throw new Error(msg); }
+            assertEqual(a, b, msg) {
+                const match = a === b;
+                this.assert(match, msg || `Expected ${JSON.stringify(b)}, got ${JSON.stringify(a)}`);
+            }
+            assertTruthy(v, msg) { this.assert(!!v, msg || `Expected truthy, got ${JSON.stringify(v)}`); }
+            assertFalsy(v, msg) { this.assert(!v, msg || `Expected falsy, got ${JSON.stringify(v)}`); }
+            assertFunction(v, msg) { this.assert(typeof v === 'function', msg || `Expected function, got ${typeof v}`); }
+            assertContains(a, b, msg) {
+                this.assert(String(a).includes(b), msg || `Expected "${a}" to contain "${b}"`);
+            }
+            async run() {
+                const resultsDiv = document.getElementById('results');
+                console.group(`🧪 ${this.name}`);
+                resultsDiv.innerHTML += `<h2>${this.name}</h2>`;
+
+                for (const { desc, fn } of this.tests) {
+                    try {
+                        await fn(this);
+                        this.results.passed++;
+                        console.log(`  ✅ ${desc}`);
+                        resultsDiv.innerHTML += `<div class="pass">✅ ${desc}</div>`;
+                    } catch (e) {
+                        this.results.failed++;
+                        this.results.errors.push({ desc, error: e });
+                        console.error(`  ❌ ${desc}: ${e.message}`);
+                        resultsDiv.innerHTML += `<div class="fail">❌ ${desc}: ${e.message}</div>`;
+                    }
+                }
+                console.groupEnd();
+
+                const summary = `📊 ${this.results.passed} passed, ${this.results.failed} failed`;
+                const summaryClass = this.results.failed > 0 ? 'summary-fail' : 'summary-pass';
+                resultsDiv.innerHTML += `<div class="${summaryClass}">${summary}</div>`;
+
+                return this.results;
+            }
+        }
+
+        // Wait for everything including the bundle to fully load and initialize
+        window.addEventListener('load', async () => {
+            // Poll for Blockly.Blocks to be available (set by index.js DOMContentLoaded)
+            const waitForBlockly = () => new Promise((resolve) => {
+                const check = () => {
+                    if (window.Blockly && window.Blockly.Blocks) {
+                        resolve();
+                    } else {
+                        setTimeout(check, 100);
+                    }
+                };
+                check();
+            });
+
+            // Wait up to 5 seconds for Blockly to be ready
+            const timeout = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Timeout waiting for Blockly')), 5000));
+
+            try {
+                await Promise.race([waitForBlockly(), timeout]);
+            } catch (e) {
+                document.getElementById('results').innerHTML =
+                    `<div class="fail">❌ ${e.message}</div>`;
+                return;
+            }
+
+            const harness = new TestHarness('Block Definitions');
+
+            // ========== Block Registration Tests ==========
+
+            harness.test('Blockly is loaded', (t) => {
+                t.assertTruthy(typeof Blockly !== 'undefined', 'Blockly should be defined');
+                t.assertTruthy(Blockly.Blocks, 'Blockly.Blocks should exist');
+            });
+
+            harness.test('procedures_lambda block is registered', (t) => {
+                t.assertTruthy(Blockly.Blocks['procedures_lambda'],
+                    'procedures_lambda should be registered');
+            });
+
+            harness.test('procedures_generic_call block is registered', (t) => {
+                t.assertTruthy(Blockly.Blocks['procedures_generic_call'],
+                    'procedures_generic_call should be registered');
+            });
+
+            harness.test('Standard procedure blocks are registered', (t) => {
+                t.assertTruthy(Blockly.Blocks['procedures_string-length'],
+                    'procedures_string-length should be registered');
+                t.assertTruthy(Blockly.Blocks['procedures_length'],
+                    'procedures_length should be registered');
+            });
+
+            harness.test('Mutator helper blocks are registered', (t) => {
+                t.assertTruthy(Blockly.Blocks['procedures_call_container'],
+                    'procedures_call_container should be registered');
+                t.assertTruthy(Blockly.Blocks['procedures_call_item'],
+                    'procedures_call_item should be registered');
+            });
+
+            harness.test('procedures_lambda has expected properties', (t) => {
+                const lambdaBlock = Blockly.Blocks['procedures_lambda'];
+                t.assertFunction(lambdaBlock.init, 'Lambda block should have init function');
+                t.assertEqual(lambdaBlock.category, 'Procedures', 'Category should be Procedures');
+                t.assertEqual(lambdaBlock.bodyInputName, 'STACK', 'bodyInputName should be STACK');
+            });
+
+            // ========== Workspace Tests ==========
+
+            const codegenHarness = new TestHarness('Workspace & Code Generation');
+            let workspace = null;
+
+            function setupWorkspace() {
+                workspace = new Blockly.Workspace();
+            }
+            function teardownWorkspace() {
+                if (workspace) { workspace.dispose(); workspace = null; }
+            }
+
+            codegenHarness.test('Can create headless workspace', (t) => {
+                setupWorkspace();
+                try {
+                    t.assertTruthy(workspace, 'Workspace should be created');
+                    t.assertTruthy(workspace instanceof Blockly.Workspace);
+                } finally {
+                    teardownWorkspace();
+                }
+            });
+
+            codegenHarness.test('Lambda block can be created and has output', (t) => {
+                setupWorkspace();
+                try {
+                    const block = workspace.newBlock('procedures_lambda');
+                    t.assertTruthy(block, 'Block should be created');
+                    t.assertTruthy(block.outputConnection, 'Lambda should have output connection');
+                } finally {
+                    teardownWorkspace();
+                }
+            });
+
+            codegenHarness.test('Generic call block has PROC input', (t) => {
+                setupWorkspace();
+                try {
+                    const block = workspace.newBlock('procedures_generic_call');
+                    t.assertTruthy(block.getInput('PROC'), 'Should have PROC input');
+                } finally {
+                    teardownWorkspace();
+                }
+            });
+
+            codegenHarness.test('String-length block has string input', (t) => {
+                setupWorkspace();
+                try {
+                    const block = workspace.newBlock('procedures_string-length');
+                    t.assertTruthy(block.getInput('string'), 'Should have string input');
+                } finally {
+                    teardownWorkspace();
+                }
+            });
+
+            codegenHarness.test('Length block has list input', (t) => {
+                setupWorkspace();
+                try {
+                    const block = workspace.newBlock('procedures_length');
+                    t.assertTruthy(block.getInput('list'), 'Should have list input');
+                } finally {
+                    teardownWorkspace();
+                }
+            });
+
+            // ========== Code Generator Tests ==========
+
+            // Check if schemeCodeGenerator is exposed globally
+            codegenHarness.test('schemeCodeGenerator is available', (t) => {
+                // The generator should be exposed by the bundle
+                t.assertTruthy(typeof schemeCodeGenerator !== 'undefined' ||
+                    typeof window.schemeCodeGenerator !== 'undefined',
+                    'schemeCodeGenerator should be exposed');
+            });
+
+            // Run all test harnesses
+            const results1 = await harness.run();
+            const results2 = await codegenHarness.run();
+
+            // Final summary
+            const totalPassed = results1.passed + results2.passed;
+            const totalFailed = results1.failed + results2.failed;
+            const resultsDiv = document.getElementById('results');
+            const summaryClass = totalFailed > 0 ? 'summary-fail' : 'summary-pass';
+            resultsDiv.innerHTML += `<hr><div class="${summaryClass}">🎯 Total: ${totalPassed} passed, ${totalFailed} failed</div>`;
+
+            // For automation: set window.testResults
+            window.testResults = {
+                passed: totalPassed,
+                failed: totalFailed,
+                success: totalFailed === 0
+            };
+        });
+    </script>
+</body>
+
+</html>

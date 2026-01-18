@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Scheme Blocks Test Suite</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+
+        h1 {
+            color: #569cd6;
+        }
+
+        h2 {
+            color: #4ec9b0;
+            margin-top: 30px;
+        }
+
+        a {
+            color: #ce9178;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        ul {
+            line-height: 2;
+        }
+
+        .description {
+            color: #808080;
+            font-size: 0.9em;
+        }
+
+        iframe {
+            width: 100%;
+            height: 500px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            margin: 10px 0;
+            background: #1e1e1e;
+        }
+
+        .note {
+            background: #2d2d2d;
+            border-left: 3px solid #569cd6;
+            padding: 10px 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🧪 Scheme Blocks Test Suite</h1>
+
+    <div class="note">
+        <strong>Note:</strong> This test suite has two parts:
+        <ul>
+            <li><strong>Node.js tests</strong> - Run with <code>npm test</code> (mixin utilities)</li>
+            <li><strong>Browser tests</strong> - View this page (Blockly blocks, code generation)</li>
+        </ul>
+    </div>
+
+    <h2>Browser-Based Tests</h2>
+    <p>Click any test to run it in a new tab, or view them in iframes below:</p>
+
+    <ul>
+        <li>
+            <a href="blocks_test.html" target="_blank">blocks_test.html</a>
+            <span class="description">- Block definitions and code generation</span>
+        </li>
+    </ul>
+
+    <h2>Block Definition Tests</h2>
+    <iframe src="blocks_test.html"></iframe>
+
+    <h2>Node.js Tests</h2>
+    <p>Run these in your terminal:</p>
+    <pre style="background: #2d2d2d; padding: 15px; border-radius: 4px;">
+npm test
+
+# Output:
+# 🧪 Running Scheme Blocks Test Suite
+# 🧪 Mixin Utilities
+#   ✅ Non-function properties are copied directly
+#   ✅ Function properties receive original as first arg
+#   ✅ Mixin function can call original function
+#   ✅ When target has no matching property, orig is undefined
+#   ✅ blocklyMixin calls mixin init function
+#   ✅ Original functions are bound to target context
+# 📊 6 passed, 0 failed
+  </pre>
+</body>
+
+</html>
