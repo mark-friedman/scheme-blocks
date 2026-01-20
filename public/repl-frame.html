@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Scheme Blocks REPL</title>
+    <!-- Import scheme-js implementation and REPL web component -->
+    <script type="module" src="../libs/scheme.js"></script>
+    <script type="module" src="../libs/scheme-repl.js"></script>
+    <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        scheme-repl {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <scheme-repl></scheme-repl>
+</body>
+
+</html>

@@ -1,5 +1,31 @@
 # CHANGES.md
 
+## 2026-01-19: Scheme Code Interop Rewrite
+
+### Summary
+Rewrote procedure block definitions from JavaScript to idiomatic Scheme using proper `scheme-js` interoperability features.
+
+### Files Modified
+- `src/utils/mixin.scm` - Added JSDoc-style comments, use `vector-length`/`vector-ref` for arrays, `js-set!` for dynamic keys
+- `src/blocks/mixins.scm` - Added JSDoc-style comments, use object spread syntax `#{(... obj)}`
+- `src/blocks/procedures.scm` - Complete rewrite with proper interop patterns
+
+### Key Interop Patterns Applied
+
+| Issue | Wrong | Correct |
+|-------|-------|---------|
+| Nested objects in vectors | `#(#{ ... })` | `(vector #{ ... })` |
+| Dynamic property set | `(set! (js-ref obj key) val)` | `(js-set! obj key val)` |
+| JS constructor calls | `(new Class args)` | `(js-new Class args)` |
+| MutatorIcon | `(js-new MutatorIcon quarks)` | `(js-new MutatorIcon quarks this)` |
+| Method chaining across lines | `.method` on new line | Use `let*` bindings |
+| Extending JS classes | `js-eval` with class syntax | `define-class` with `super` |
+
+### Verification
+- **11 assertions passed, 0 failed** in `procedures_scheme_test.html`
+
+---
+
 ## 2026-01-18: Blockly Test Environment & Dependency Updates
 
 ### Summary

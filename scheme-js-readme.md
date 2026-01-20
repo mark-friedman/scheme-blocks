@@ -5,13 +5,13 @@ A faithful, layered implementation of the **Scheme R7RS-Small** standard in Java
 ## 🎯 Goals
 
 ### Language Goals
-- **Global Environment**: Scheme closures and continuations are first-class JavaScript functions. JavaScript global definitions (on `window` or `globalThis`) are automatically visible in the Scheme global environment.
+- **Global Environment**: JavaScript global definitions (on `window` or `globalThis`) are automatically visible in the Scheme global environment.
 - **Node.js REPL**: Full-featured interactive REPL with history, multiline support, and colorful output.
 - **Browser-Ready**: Easy integration via a custom `<scheme-repl>` web component or standard `<script>` tags.
 - **R7RS-Small**: High degree of compatibility with the R7RS-small standard (see [R7RS Libraries](#r7rs-libraries)).
 - **Tail Call Optimization (TCO)**: Proper handling of tail recursion (even when interleaved with JS) using a trampoline architecture.
 - **First-Class Continuations**: Full support for `call/cc`, including `dynamic-wind` and multiple return values.
-- **JavaScript Interop**: Seamless calling between Scheme and JavaScript, including shared data structures and transparent boundary crossing.
+- **JavaScript Interop**: Seamless calling between Scheme and JavaScript, including shared data structures and transparent boundary crossing. Scheme closures and continuations are first-class JavaScript functions.
 
 ### Architectural Goals
 - **Layered Design**: Build complex features (macros, data structures) on top of a minimal, robust kernel.
@@ -189,6 +189,32 @@ Import with: `(import (scheme-js interop))`
 | `(js-set! obj prop val)` | Set object property | `(js-set! obj "x" 42)` |
 | `(js-invoke obj method args...)` | Call object method | `(js-invoke console "log" "Hi")` |
 | `(js-obj key val ...)` | Create JS object | `(js-obj 'x 1 'y 2)` → `{x: 1, y: 2}` |
+| `(js-obj-merge obj ...)` | Merge objects | `(js-obj-merge obj1 obj2)` → `{...obj1, ...obj2}` |
+| `(js-typeof val)` | Get JS type | `(js-typeof 42)` → `"number"` |
+| `js-undefined` | JS undefined value | `(eq? x js-undefined)` |
+| `(js-undefined? val)` | Undefined predicate | `(js-undefined? x)` → `#t` |
+| `js-null` | JS null value | `(eq? x js-null)` |
+| `(js-null? val)` | Null predicate | `(js-null? x)` → `#t` |
+| `(js-new constructor args...)` | Instantiate JS class | `(js-new Date 2024 0 1)` |
+
+### Instantiating JavaScript Classes
+
+Use `js-new` to create instances of JavaScript classes with the `new` operator:
+
+```scheme
+;; JavaScript globals are automatically available
+(define now (js-new Date))
+(define birthday (js-new Date 1990 0 1))
+
+;; Standard library classes
+(define my-map (js-new Map))
+(my-map.set "key" "value")
+(my-map.get "key")  ;; => "value"
+
+;; Create arrays with specific length
+(define arr (js-new Array 10))
+arr.length  ;; => 10
+```
 
 ### Dot Notation Syntax
 
@@ -234,6 +260,20 @@ Create JavaScript objects using a concise literal syntax:
 (define base #{(a 1) (b 2)})
 #{(... base) (c 3)}         ;; => {a: 1, b: 2, c: 3}
 ```
+
+> [!IMPORTANT]
+> **Literal Evaluation Semantics:** The `#{}` object literal syntax evaluates its values at runtime (like JavaScript), while `#()` vector literals do not evaluate their contents (following R7RS standard). When nesting object literals (or any evaluated expressions) inside vectors, use `(vector ...)` instead of `#(...)` to ensure the objects are evaluated:
+> 
+> ```scheme
+> ;; Correct - objects are evaluated:
+> (vector #{(x 1)} #{(y 2)})
+> ;; => [object, object]
+> 
+> ;; Incorrect - creates unevaluated expressions:
+> #(#{(x 1)} #{(y 2)})
+> ;; => [cons-cell, cons-cell]
+> ```
+
 
 ### Callable Closures
 
@@ -345,25 +385,67 @@ Standard R7RS macros plus extensions:
 
 ### `define-class` (Extension)
 
-Define Scheme classes compatible with JavaScript inheritance:
+Define Scheme classes compatible with JavaScript inheritance.
 
+**Syntax:**
+```scheme
+(define-class ClassName [ParentClass]
+  constructor-name
+  predicate-name
+  (fields
+    (field-name accessor [mutator])
+    ...)
+  [(constructor (params...)
+    body...)]
+  (methods
+    (method-name (params...)
+      body...)
+    ...))
+```
+
+**Basic example:**
 ```scheme
 (define-class Point
-  (make-point x y)
+  make-point
   point?
-  (fields
-    (x point-x set-point-x!)
-    (y point-y set-point-y!))
+  (fields (x point-x) (y point-y))
+  (constructor (x y)
+    (set! this.x x)
+    (set! this.y y))
   (methods
-    (distance ((self) other)
-      (let ((dx (- (point-x other) (point-x self)))
-            (dy (- (point-y other) (point-y self))))
-        (sqrt (+ (* dx dx) (* dy dy)))))))
+    (magnitude ()
+      (sqrt (+ (* this.x this.x) (* this.y this.y))))))
 
-(define p1 (make-point 0 0))
-(define p2 (make-point 3 4))
-((point-distance p1) p2)  ;; => 5
+(define p (make-point 3 4))
+(p.magnitude)  ;; => 5
 ```
+
+**Custom constructor with explicit super call:**
+```scheme
+(define-class ColoredPoint Point
+  make-colored-point
+  colored-point?
+  (fields (color point-color))
+  (constructor (x y color)
+    (super x y)              ;; Call parent constructor with custom args
+    (set! this.color color))
+  (methods
+    (describe ()
+      (string-append this.color " point"))))
+
+(define cp (make-colored-point 3 4 "red"))
+(cp.magnitude)  ;; => 5 (inherited)
+(cp.describe)   ;; => "red point"
+```
+
+**Features:**
+- **Inheritance**: Optional parent class
+- **Constructor clause**: Custom initialization with `this` binding
+- **Explicit super call**: `(super arg...)` to pass specific args to parent constructor
+- **Super method calls**: `(super.methodName args...)` to call parent methods
+- **Fields**: Define accessors and optional mutators
+- **Methods**: Use `this` to access instance properties
+
 
 ### Additional Procedures
 

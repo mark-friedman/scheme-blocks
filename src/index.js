@@ -23,37 +23,29 @@
 
 import * as Blockly from 'blockly';
 import { LexicalVariablesPlugin } from '@mit-app-inventor/blockly-block-lexical-variables';
-import { standardProcedureToolboxJson, schemeCodeGenerator } from './blocks/procedures';
+
 
 document.addEventListener('DOMContentLoaded', function () {
   // Expose globals for testing and future Scheme interop
   window.Blockly = Blockly;
+  window.LexicalVariablesPlugin = LexicalVariablesPlugin;
+
+  // Initialize Scheme generator globally (was previously done in procedures.js)
+  const schemeCodeGenerator = new Blockly.Generator('Scheme');
   window.schemeCodeGenerator = schemeCodeGenerator;
 
+  // Initial toolbox (empty, will be populated by procedures.scm)
+  const initialToolbox = { kind: 'categoryToolbox', contents: [] };
+
   const workspace = Blockly.inject('blocklyDiv', {
-    toolbox: standardProcedureToolboxJson,
+    toolbox: initialToolbox,
     media: 'media/',
   });
 
-  // Set up lambda block in Procedure toolbox category
-  const oldProcCategoryCallback =
-    workspace.getToolboxCategoryCallback(Blockly.PROCEDURE_CATEGORY_NAME);
-  workspace.removeToolboxCategoryCallback(Blockly.PROCEDURE_CATEGORY_NAME);
-  const newProcCategoryCallback = (workspace) => {
-    const oldXmlList = oldProcCategoryCallback(workspace);
-    const lambdaBlock = Blockly.utils.xml.createElement('block');
-    lambdaBlock.setAttribute('type', 'procedures_lambda');
-    lambdaBlock.setAttribute('gap', 16);
-    const genericCallBlock = Blockly.utils.xml.createElement('block');
-    genericCallBlock.setAttribute('type', 'procedures_generic_call');
-    genericCallBlock.setAttribute('gap', 16);
-    return [lambdaBlock, genericCallBlock].concat(oldXmlList);
-  };
-  workspace.registerToolboxCategoryCallback(Blockly.PROCEDURE_CATEGORY_NAME,
-    newProcCategoryCallback);
-
   // Load lexical variable plugin
   LexicalVariablesPlugin.init(workspace);
+
+  // Note: Custom procedure category callback and blocks are setup by src/blocks/procedures.scm
 
   // TODO: Uncomment the code below to show the generated code.
   // workspace.addChangeListener((event) => {

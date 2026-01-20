@@ -3,6 +3,9 @@
 
 <head>
     <title>SchemeBlocks</title>
+    <!-- Import Scheme implementation and HTML adapter for <script type="text/scheme"> -->
+    <script type="module" src="./libs/scheme.js"></script>
+    <script type="module" src="./libs/scheme-html.js"></script>
     <style>
         html,
         body {
@@ -36,6 +39,11 @@
         #blocklyButton {
             float: right;
         }
+
+        nav {
+            position: relative;
+            z-index: 10;
+        }
     </style>
 </head>
 
@@ -46,10 +54,17 @@
     <div id='blocklyDiv' class="split left">
     </div>
     <div class="split right">
-        <iframe id="scheme-frame" src="./try-gambit/index.html" width="100%" height="100%" ></iframe>
+        <iframe id="scheme-frame" src="./repl-frame.html" width="100%" height="100%"></iframe>
     </div>
 
+    <!-- Load webpack-bundled Blockly initialization -->
     <script type='text/javascript' src='./index.js'></script>
+
+    <!-- Load Scheme application code (after Blockly is initialized) -->
+    <script type="text/scheme" src="./src/utils/mixin.scm"></script>
+    <script type="text/scheme" src="./src/blocks/mixins.scm"></script>
+    <script type="text/scheme" src="./src/blocks/procedures.scm"></script>
+    <script type="text/scheme" src="./src/app.scm"></script>
 
 </body>
 

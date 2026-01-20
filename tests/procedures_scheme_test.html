@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Scheme Procedures Block Tests</title>
+    <!-- Load Blockly from webpack bundle (in-memory) -->
+    <script type="text/javascript" src="/index.js"></script>
+    <!-- Load Scheme -->
+    <script type="module" src="../libs/scheme.js"></script>
+    <script type="module" src="../libs/scheme-html.js"></script>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+        }
+
+        .pass {
+            color: green;
+        }
+
+        .fail {
+            color: red;
+        }
+
+        #results {
+            white-space: pre-wrap;
+        }
+
+        #blocklyDiv {
+            height: 300px;
+            width: 100%;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Scheme Procedures Block Tests</h1>
+    <div id="blocklyDiv"></div>
+    <div id="results"></div>
+
+    <script type="module">
+        import { schemeEval } from '../libs/scheme.js';
+
+        const results = document.getElementById('results');
+        let passed = 0;
+        let failed = 0;
+
+        function log(msg, isPass = null) {
+            const div = document.createElement('div');
+            if (isPass === true) {
+                div.className = 'pass';
+                div.textContent = '✅ ' + msg;
+                passed++;
+            } else if (isPass === false) {
+                div.className = 'fail';
+                div.textContent = '❌ ' + msg;
+                failed++;
+            } else {
+                div.textContent = msg;
+            }
+            results.appendChild(div);
+        }
+
+        function assert(condition, testName) {
+            if (condition) {
+                log(`${testName}`, true);
+            } else {
+                log(`${testName}: FAILED`, false);
+            }
+        }
+
+        function assertEqual(actual, expected, testName) {
+            const actualStr = String(actual);
+            const expectedStr = String(expected);
+            if (actualStr === expectedStr) {
+                log(`${testName}: ${actualStr}`, true);
+            } else {
+                log(`${testName}: Expected ${expectedStr}, got ${actualStr}`, false);
+            }
+        }
+
+        async function loadSchemeFile(path) {
+            const response = await fetch(path);
+            const code = await response.text();
+            return schemeEval(code);
+        }
+
+        const toolboxJson = {
+            "kind": "flyoutToolbox",
+            "contents": [
+                {
+                    "kind": "block",
+                    "type": "procedures_lambda"
+                },
+                {
+                    "kind": "block",
+                    "type": "procedures_generic_call"
+                }
+            ]
+        };
+
+        async function runTests() {
+            log('=== Scheme Procedures Block Tests ===\n');
+
+            // Wait for Blockly to be ready
+            if (typeof Blockly === 'undefined') {
+                log('Waiting for Blockly to load...');
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+
+            console.log('Window Globals Debug:');
+            console.log('Blockly:', window.Blockly);
+            console.log('LexicalVariablesPlugin:', window.LexicalVariablesPlugin);
+            console.log('standardProcedureToolboxJson:', window.standardProcedureToolboxJson);
+
+            try {
+                // Load mixins
+                log('Loading mixin.scm...');
+                await loadSchemeFile('../src/utils/mixin.scm');
+                log('Loading mixins.scm...');
+                await loadSchemeFile('../src/blocks/mixins.scm');
+
+                // Load procedures.scm (overwrites JS definitions)
+                log('Loading procedures.scm...');
+                await loadSchemeFile('../src/blocks/procedures.scm');
+                log('Loaded successfully.\n');
+
+                // Create a workspace for testing
+                const workspace = Blockly.inject('blocklyDiv', {
+                    toolbox: toolboxJson
+                });
+                log('Workspace created.\n');
+
+                // Test 1: procedures_lambda block exists
+                log('--- Test 1: Lambda block registration ---');
+                assert(Blockly.Blocks['procedures_lambda'] !== undefined,
+                    'procedures_lambda block is registered');
+
+                // Test 2: procedures_generic_call block exists
+                log('--- Test 2: Generic call block registration ---');
+                assert(Blockly.Blocks['procedures_generic_call'] !== undefined,
+                    'procedures_generic_call block is registered');
+
+                // Test 3: Can create a lambda block
+                log('--- Test 3: Create lambda block ---');
+                const lambdaBlock = workspace.newBlock('procedures_lambda');
+                lambdaBlock.initSvg();
+                lambdaBlock.render();
+                assert(lambdaBlock !== null, 'Lambda block created successfully');
+
+                // Test 4: Lambda block has output connection
+                log('--- Test 4: Lambda block has output ---');
+                assert(lambdaBlock.outputConnection !== null,
+                    'Lambda block has output connection');
+
+                // Test 5: Can create generic call block
+                log('--- Test 5: Create generic call block ---');
+                const callBlock = workspace.newBlock('procedures_generic_call');
+                callBlock.initSvg();
+                callBlock.render();
+                assert(callBlock !== null, 'Generic call block created successfully');
+
+                // Test 6: Generic call block has PROC input
+                log('--- Test 6: Generic call has PROC input ---');
+                const procInput = callBlock.getInput('PROC');
+                assert(procInput !== null, 'Generic call block has PROC input');
+
+                // Test 7: Code generator exists for lambda
+                log('--- Test 7: Lambda code generator ---');
+                // TODO: Check schemeCodeGenerator.forBlock.procedures_lambda
+
+                // Test 8: Standard procedure blocks exist
+                log('--- Test 8: Standard procedure blocks ---');
+                assert(Blockly.Blocks['procedures_string-length'] !== undefined,
+                    'string-length procedure block exists');
+                assert(Blockly.Blocks['procedures_length'] !== undefined,
+                    'length procedure block exists');
+
+                // Test 9: Code generation for string-length
+                log('--- Test 9: string-length code generation ---');
+                const strLenBlock = workspace.newBlock('procedures_string-length');
+                strLenBlock.initSvg();
+                strLenBlock.render();
+                const code = schemeCodeGenerator.forBlock['procedures_string-length'](strLenBlock);
+                assert(code !== undefined && code !== '',
+                    'string-length generates code: ' + code);
+
+                // Test 10: Chameleon mixin works
+                log('--- Test 10: Chameleon mixin integration ---');
+                assert(callBlock.hasOutput !== undefined,
+                    'Generic call block has hasOutput property');
+                assert(callBlock.hasPreviousAndNext !== undefined,
+                    'Generic call block has hasPreviousAndNext property');
+
+            } catch (e) {
+                log('\n❌ Error: ' + e.message, false);
+                console.error(e);
+            }
+
+            // Summary
+            log('\n=== Summary ===');
+            log(`${passed} passed, ${failed} failed`);
+        }
+
+        // Wait for everything to load
+        setTimeout(runTests, 2000);
+    </script>
+</body>
+
+</html>

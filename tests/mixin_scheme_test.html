@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Scheme Mixin Tests</title>
+    <script type="module" src="../libs/scheme.js"></script>
+    <script type="module" src="../libs/scheme-html.js"></script>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+        }
+
+        .pass {
+            color: green;
+        }
+
+        .fail {
+            color: red;
+        }
+
+        h2 {
+            margin-top: 20px;
+        }
+
+        #results {
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Scheme Mixin Utility Tests</h1>
+    <div id="results"></div>
+
+    <script type="module">
+        import { schemeEval } from '../libs/scheme.js';
+
+        const results = document.getElementById('results');
+        let passed = 0;
+        let failed = 0;
+
+        function log(msg, isPass = null) {
+            const div = document.createElement('div');
+            if (isPass === true) {
+                div.className = 'pass';
+                div.textContent = '✅ ' + msg;
+                passed++;
+            } else if (isPass === false) {
+                div.className = 'fail';
+                div.textContent = '❌ ' + msg;
+                failed++;
+            } else {
+                div.textContent = msg;
+            }
+            results.appendChild(div);
+        }
+
+        function assertEqual(actual, expected, testName) {
+            // Handle Symbol comparison
+            const actualStr = typeof actual === 'symbol' ? actual.description : String(actual);
+            const expectedStr = typeof expected === 'symbol' ? expected.description : String(expected);
+
+            if (actualStr === expectedStr) {
+                log(`${testName}: ${actualStr} === ${expectedStr}`, true);
+            } else {
+                log(`${testName}: Expected ${expectedStr}, got ${actualStr}`, false);
+            }
+        }
+
+        function assertTrue(actual, testName) {
+            if (actual === true) {
+                log(`${testName}: true`, true);
+            } else {
+                log(`${testName}: Expected true, got ${actual}`, false);
+            }
+        }
+
+        async function loadSchemeFile(path) {
+            const response = await fetch(path);
+            const code = await response.text();
+            return schemeEval(code);
+        }
+
+        async function runTests() {
+            log('=== Scheme Mixin Utility Tests ===\n');
+
+            try {
+                // Load the mixin library by fetching and evaluating
+                log('Loading mixin.scm...');
+                await loadSchemeFile('../src/utils/mixin.scm');
+                log('Loaded successfully.\n');
+
+                // Test 1: Non-function properties are copied directly
+                log('--- Test 1: Non-function properties copied ---');
+                schemeEval(`
+                    (define test-mixin (js-obj 'x 42 'y "hello"))
+                    (define test-target (js-obj 'a 1))
+                    (mixin test-mixin test-target)
+                `);
+                const x = schemeEval('test-target.x');
+                const y = schemeEval('test-target.y');
+                assertEqual(x, 42, 'test-target.x');
+                assertEqual(y, 'hello', 'test-target.y');
+
+                // Test 2: Function properties receive original as first arg
+                log('\n--- Test 2: Function wrapping with original ---');
+                schemeEval(`
+                    (define mixin-with-func 
+                      (js-obj 'greet 
+                        (lambda (orig name) 
+                          (string-append "Hello, " name "!"))))
+                    (define target-obj (js-obj))
+                    (mixin mixin-with-func target-obj)
+                `);
+                const greeting = schemeEval('(target-obj.greet "World")');
+                assertEqual(greeting, 'Hello, World!', 'Mixed-in function works');
+
+                // Test 3: Mixin function can call original function
+                log('\n--- Test 3: Calling original from mixin ---');
+                schemeEval(`
+                    (define original-obj 
+                      (js-obj 'compute (lambda (x) (* x 2))))
+                    (define enhancing-mixin
+                      (js-obj 'compute (lambda (orig x) (+ (orig x) 10))))
+                    (mixin enhancing-mixin original-obj)
+                `);
+                const result = schemeEval('(original-obj.compute 5)');
+                assertEqual(result, 20, 'Original (5*2) + 10 = 20');
+
+                // Test 4: When target has no matching property, orig is undefined
+                log('\n--- Test 4: Orig is undefined when no target property ---');
+                schemeEval(`
+                    (define check-orig-result #f)
+                    (define mixin-checks-orig
+                      (js-obj 'action 
+                        (lambda (orig) 
+                          (set! check-orig-result (if (undefined? orig) 'was-undefined 'was-defined)))))
+                    (define empty-target (js-obj))
+                    (mixin mixin-checks-orig empty-target)
+                    (empty-target.action)
+                `);
+                const origResult = schemeEval('check-orig-result');
+                assertEqual(origResult, Symbol.for('was-undefined'), 'Orig is undefined');
+
+                // Test 5: blockly-mixin calls mixin init function
+                log('\n--- Test 5: blockly-mixin calls init ---');
+                schemeEval(`
+                    (define init-called #f)
+                    (define blockly-style-mixin
+                      (js-obj 'init (lambda (orig) (set! init-called #t))))
+                    (define blockly-target (js-obj))
+                    (blockly-mixin blockly-style-mixin blockly-target)
+                `);
+                const initCalled = schemeEval('init-called');
+                assertTrue(initCalled, 'init was called by blockly-mixin');
+
+            } catch (e) {
+                log('\n❌ Error: ' + e.message, false);
+                console.error(e);
+            }
+
+            // Summary
+            log('\n=== Summary ===');
+            log(`${passed} passed, ${failed} failed`);
+        }
+
+        // Wait for scheme-html to process scripts, then run tests
+        setTimeout(runTests, 1000);
+    </script>
+</body>
+
+</html>

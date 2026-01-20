@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Scheme Integration Tests</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .test-group {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+
+        .test-group h2 {
+            margin-top: 0;
+            color: #555;
+        }
+
+        .pass {
+            color: green;
+        }
+
+        .fail {
+            color: red;
+        }
+
+        #test-results {
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+
+        #summary {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        #summary.all-pass {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        #summary.has-fail {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Scheme Integration Tests</h1>
+    <p>Tests for Scheme↔JavaScript integration in the main application.</p>
+
+    <div id="summary">Loading...</div>
+
+    <div class="test-group">
+        <h2>scheme-js Loading</h2>
+        <div id="scheme-loading-results"></div>
+    </div>
+
+    <div class="test-group">
+        <h2>Scheme↔JavaScript Interop</h2>
+        <div id="interop-results"></div>
+    </div>
+
+    <div class="test-group">
+        <h2>DOM Access from Scheme</h2>
+        <div id="dom-results"></div>
+    </div>
+
+    <!-- Hidden elements for testing -->
+    <div id="test-div" style="display:none;">Test Content</div>
+    <button id="test-button" style="display:none;">Test Button</button>
+
+    <script type="module">
+        // Import schemeEval directly from the module
+        import { schemeEval } from '../libs/scheme.js';
+
+        // Make it available on window for the tests and potential debugging
+        window.schemeEval = schemeEval;
+
+        // Test harness
+        let passed = 0;
+        let failed = 0;
+
+        function assert(condition, message) {
+            if (condition) {
+                passed++;
+                return `<div class="pass">✅ ${message}</div>`;
+            } else {
+                failed++;
+                return `<div class="fail">❌ ${message}</div>`;
+            }
+        }
+
+        function updateSummary() {
+            const summary = document.getElementById('summary');
+            const total = passed + failed;
+            summary.textContent = `${passed}/${total} tests passed`;
+            summary.className = failed === 0 ? 'all-pass' : 'has-fail';
+        }
+
+        async function runTests() {
+            // Test Group 1: scheme-js Loading
+            const loadingResults = document.getElementById('scheme-loading-results');
+            loadingResults.innerHTML = assert(typeof schemeEval === 'function',
+                'schemeEval function is available');
+
+            // Test Group 2: Scheme↔JavaScript Interop
+            const interopResults = document.getElementById('interop-results');
+            try {
+                // Basic arithmetic
+                const sum = schemeEval('(+ 1 2 3)');
+                interopResults.innerHTML = assert(sum === 6,
+                    `Basic arithmetic: (+ 1 2 3) = ${sum}`);
+
+                // String operations
+                const str = schemeEval('(string-append "Hello" " " "World")');
+                interopResults.innerHTML += assert(str === 'Hello World',
+                    `String operations: ${str}`);
+
+                // Define and call function
+                schemeEval('(define (square x) (* x x))');
+                const squared = schemeEval('(square 5)');
+                interopResults.innerHTML += assert(squared === 25,
+                    `Define and call: (square 5) = ${squared}`);
+
+                // Access JavaScript globals
+                const mathPi = schemeEval('(js-eval "Math.PI")');
+                interopResults.innerHTML += assert(typeof mathPi === 'number' && mathPi > 3.14,
+                    `Can access JavaScript Math.PI from Scheme: ${mathPi}`);
+
+            } catch (e) {
+                interopResults.innerHTML += assert(false, 'Interop test failed: ' + e.message);
+            }
+
+            // Test Group 3: DOM Access from Scheme
+            const domResults = document.getElementById('dom-results');
+            try {
+                // Get element by ID using dot notation
+                const element = schemeEval('(document.getElementById "test-div")');
+                domResults.innerHTML = assert(element !== null && element !== undefined,
+                    'Can get DOM element by ID from Scheme');
+
+                // Read element content using js-ref for property access
+                const content = schemeEval('(js-ref (document.getElementById "test-div") "textContent")');
+                domResults.innerHTML += assert(content === 'Test Content',
+                    `Can read textContent via js-ref: "${content}"`);
+
+                // Set up event listener test
+                let buttonClicked = false;
+                window.testButtonCallback = () => { buttonClicked = true; };
+
+                schemeEval(`
+                    (let ((btn (document.getElementById "test-button")))
+                      (btn.addEventListener "click" 
+                        (lambda (e) (window.testButtonCallback))))
+                `);
+
+                // Simulate click
+                document.getElementById('test-button').click();
+
+                domResults.innerHTML += assert(buttonClicked,
+                    'Event listener from Scheme works');
+
+            } catch (e) {
+                domResults.innerHTML += assert(false, 'DOM access test failed: ' + e.message);
+            }
+
+            updateSummary();
+        }
+
+        // Run tests after DOM is ready
+        runTests();
+    </script>
+</body>
+
+</html>
