@@ -21,8 +21,16 @@ Rewrote procedure block definitions from JavaScript to idiomatic Scheme using pr
 | Method chaining across lines | `.method` on new line | Use `let*` bindings |
 | Extending JS classes | `js-eval` with class syntax | `define-class` with `super` |
 
-### Verification
+### Verification (2026-01-20)
 - **11 assertions passed, 0 failed** in `procedures_scheme_test.html`
+- End-to-end verification:
+  - ✅ Blockly workspace loads
+  - ✅ Toolbox categories displayed
+  - ✅ Code generation works: `(lambda () #f)`
+  - ✅ REPL evaluates correctly: `(+ 1 2)` → `3`
+- Bugs fixed during verification:
+  - `js-object?` → `(equal? (js-typeof e) "object")` in `app.scm`
+  - Added missing `procedures_lambda` code generator to `procedures.scm`
 
 ---
 

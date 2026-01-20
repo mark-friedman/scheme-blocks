@@ -23,7 +23,10 @@
 (define (generate-code)
   (let ((workspace (blockly.getMainWorkspace)))
     (if workspace
-        (guard (e (else (string-append "Error: " (if (js-object? e) e.message (display-to-string e)))))
+        (guard (e (else (string-append "Error: " 
+                          (if (equal? (js-typeof e) "object") 
+                              (if (js-undefined? e.message) (display-to-string e) e.message)
+                              (display-to-string e)))))
           (generator.workspaceToCode workspace))
         "")))
 

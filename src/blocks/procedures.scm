@@ -164,6 +164,27 @@
 (set! Blockly.Blocks.procedures_lambda procedures-lambda)
 
 ;; ---------------------------------------------------------------------------
+;; Generator for procedures_lambda
+;; ---------------------------------------------------------------------------
+
+;; Generate Scheme lambda expression from procedures_lambda block
+;; @param {Block} block - The Blockly block
+;; @returns {Array|string} Generated code and precedence, or just code
+(set! schemeCodeGenerator.forBlock.procedures_lambda
+  (lambda (block)
+    ;; Get arguments from the block
+    (let* ((args-array (if (js-undefined? block.arguments_) #() block.arguments_))
+           (args-str (args-array.join " "))
+           ;; Get the body code from the STACK input
+           (body-code (schemeCodeGenerator.statementToCode block "STACK")))
+      ;; Construct: (lambda (arg1 arg2 ...) body)
+      (let ((code (string-append "(lambda (" args-str ")\n" 
+                                (if (equal? body-code "") "  #f" body-code) ")")))
+        (if block.outputConnection
+            (vector code 1)
+            code)))))
+
+;; ---------------------------------------------------------------------------
 ;; Block: procedures_generic_call
 ;; ---------------------------------------------------------------------------
 
