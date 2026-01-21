@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Initialization Tests</title>
+    <!-- Load Blockly bundle (which now only exposes globals) -->
+    <script type="text/javascript" src="/index.js"></script>
+    <!-- Load Scheme implementation -->
+    <script type="module" src="../libs/scheme.js"></script>
+    <script type="module" src="../libs/scheme-html.js"></script>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+
+        .pass {
+            color: #4ec9b0;
+        }
+
+        .fail {
+            color: #f44747;
+        }
+
+        #results {
+            white-space: pre-wrap;
+        }
+
+        #blocklyDiv {
+            height: 100px;
+            width: 100px;
+            visibility: hidden;
+            position: absolute;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🧪 Initialization Tests</h1>
+    <div id="blocklyDiv"></div>
+    <div id="results"></div>
+
+    <!-- Load the init script we are testing -->
+    <script type="text/scheme" src="../src/init.scm"></script>
+
+    <script type="module">
+        import { schemeEval } from '../libs/scheme.js';
+
+        const results = document.getElementById('results');
+        let passed = 0;
+        let failed = 0;
+
+        function assert(condition, message) {
+            const div = document.createElement('div');
+            if (condition) {
+                div.className = 'pass';
+                div.textContent = '✅ ' + message;
+                passed++;
+            } else {
+                div.className = 'fail';
+                div.textContent = '❌ ' + message;
+                failed++;
+            }
+            results.appendChild(div);
+        }
+
+        async function runTests() {
+            // Wait a moment for Scheme scripts to execute
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            console.log('Running tests...');
+
+            // Verify Global Objects
+            assert(window.Blockly !== undefined, 'window.Blockly is defined');
+            assert(window.LexicalVariablesPlugin !== undefined, 'window.LexicalVariablesPlugin is defined');
+            assert(window.schemeCodeGenerator !== undefined, 'window.schemeCodeGenerator is defined');
+
+            // Verify Generator State
+            if (window.schemeCodeGenerator) {
+                assert(window.schemeCodeGenerator.name_ === 'Scheme', 'Generator name is "Scheme"');
+            }
+
+            // Verify Workspace State
+            const workspace = Blockly.getMainWorkspace();
+            assert(workspace !== null, 'Blockly workspace was injected');
+
+            if (workspace) {
+                assert(workspace.options.pathToMedia === 'media/', 'Workspace media path is "media/"');
+            }
+
+            const total = passed + failed;
+            const summary = document.createElement('h2');
+            summary.textContent = `📊 ${passed}/${total} passed`;
+            summary.className = failed === 0 ? 'pass' : 'fail';
+            results.appendChild(summary);
+        }
+
+        // Run tests after everything loads
+        window.addEventListener('load', runTests);
+    </script>
+</body>
+
+</html>

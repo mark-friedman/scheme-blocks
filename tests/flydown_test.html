@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Flydown Class Tests</title>
+    <!-- Load Blockly bundle for LexicalVariablesPlugin global -->
+    <script type="text/javascript" src="/index.js"></script>
+    <script type="module" src="../libs/scheme.js"></script>
+    <script type="module" src="../libs/scheme-html.js"></script>
+</head>
+
+<body>
+    <h1>🧪 Flydown Class Tests</h1>
+    <p>Check the browser console for test results.</p>
+
+    <!-- Dependencies needed by procedures.scm -->
+    <script type="text/scheme" src="../src/init.scm"></script>
+    <script type="text/scheme" src="../src/utils/mixin.scm"></script>
+    <script type="text/scheme" src="../src/blocks/mixins.scm"></script>
+    <script type="text/scheme" src="../src/blocks/procedures.scm"></script>
+
+    <!-- The test itself -->
+    <script type="text/scheme" src="./flydown_test.scm"></script>
+</body>
+
+</html>

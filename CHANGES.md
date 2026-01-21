@@ -1,5 +1,28 @@
 # CHANGES.md
 
+## 2026-01-20: Convert index.js to Scheme-JS and Add unit tests
+
+Converted the Blockly initialization logic from JavaScript (`index.js`) to Scheme-JS (`init.scm`). This aligns with the "Scheme over JS" rule and demonstrates the power of the `scheme-js` interop features.
+
+### Changes
+
+#### Core Initialization
+- **[index.js](file:///Users/mark/code/scheme-blocks/src/index.js)**: Stripped down to npm imports and global assignments.
+- **[init.scm](file:///Users/mark/code/scheme-blocks/src/init.scm) [NEW]**: Full Blockly setup in Scheme.
+- **[index.html](file:///Users/mark/code/scheme-blocks/public/index.html)**: Added script tag for `init.scm`.
+
+#### Unit Tests
+- **[init_test.html](file:///Users/mark/code/scheme-blocks/tests/init_test.html) [NEW]**: Verified environment setup (6/6 pass).
+- **[flydown_test.scm](file:///Users/mark/code/scheme-blocks/tests/flydown_test.scm) [NEW]**: Unit test for `StandardProcedureNameFlydown` class.
+
+### Verification Results
+- ✅ **Initialization Test**: 6/6 passed.
+- ✅ **Flydown Class Test**: Passed (verified via console).
+- ✅ **Main App**: Blockly workspace successfully injected from `init.scm`.
+
+---
+
+
 ## 2026-01-19: Scheme Code Interop Rewrite
 
 ### Summary
