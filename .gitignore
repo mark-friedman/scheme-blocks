@@ -106,6 +106,4 @@ dist
 # JetBrains IDEs
 .idea/
 
-# docs directory
-docs/
 .DS_Store

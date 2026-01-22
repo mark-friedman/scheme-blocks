@@ -32,7 +32,7 @@ module.exports = {
         index: './src/index.js',
     },
     output: {
-        path: path.resolve(__dirname, 'docs'),
+        path: path.resolve(__dirname, 'dist'),
         filename: '[name].js'
     },
     devtool: "source-map",
@@ -56,27 +56,27 @@ module.exports = {
             patterns: [
                 {
                     from: path.resolve(__dirname, 'public'),
-                    to: path.resolve(__dirname, 'docs')
+                    to: path.resolve(__dirname, 'dist')
                 },
                 // Copy over media resources from the Blockly package
                 {
                     from: path.resolve(__dirname, './node_modules/blockly/media'),
-                    to: path.resolve(__dirname, 'docs/media')
+                    to: path.resolve(__dirname, 'dist/media')
                 },
                 // Copy tests for browser-based testing
                 {
                     from: path.resolve(__dirname, 'tests'),
-                    to: path.resolve(__dirname, 'docs/tests')
+                    to: path.resolve(__dirname, 'dist/tests')
                 },
                 // Copy scheme-js library files
                 {
                     from: path.resolve(__dirname, 'libs'),
-                    to: path.resolve(__dirname, 'docs/libs')
+                    to: path.resolve(__dirname, 'dist/libs')
                 },
                 // Copy src for browser-based tests to import from
                 {
                     from: path.resolve(__dirname, 'src'),
-                    to: path.resolve(__dirname, 'docs/src')
+                    to: path.resolve(__dirname, 'dist/src')
                 },
             ]
         }
