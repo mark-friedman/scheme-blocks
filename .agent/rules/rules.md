@@ -7,6 +7,12 @@ trigger: always_on
 ## Agentic Rules
 - **Following Orders**: DO NOT make any changes or carry our implementation tasks if the user just asks a question.  Just answer the question!
 
+## Blockly Library Info
+- **Context7**: Use the Context7 MSP server and specify the /google/blockly library ID.
+- **Developer Documentation**: The developer documentation website is  https://developers.google.com/blockly
+- **Developer Community Forum**:  The developer community forum Google Group is at https://groups.google.com/g/blockly
+- **Blockly Sample Code**: Use the Context7 MSP server and specify the  /google/blockly-samples library ID
+
 ## Testing Requirements
 - All new features must have accompanying unit and/or functional tests in `tests/`.
 - Any complex logic should have unit tests.  Refactor to make it testable if needed.
@@ -23,6 +29,7 @@ trigger: always_on
 
 ## Scheme Code Rules
 - **Scheme over JS**: Implementations should always be done in Scheme, if possible.  If that's not possible, isolate the minimum that is required in JavaScript and then implement the rest in Scheme.
+- **Idiomatic Scheme**: Don't just transliterate from JavaScript to Scheme.  Understand the intent of the JavaScrip code and try to use idiomatic Scheme code.
 
 ## Documentation
 - **JSDoc**: Document all JavaScript functions with JSDoc.
