@@ -31,6 +31,14 @@ trigger: always_on
 - **Scheme over JS**: Implementations should always be done in Scheme, if possible.  If that's not possible, isolate the minimum that is required in JavaScript and then implement the rest in Scheme.
 - **Idiomatic Scheme**: Don't just transliterate from JavaScript to Scheme.  Understand the intent of the JavaScrip code and try to use idiomatic Scheme code.
 
+## Task and Roadmap maintainance
+-  **Roadmap files**:  There will sometimes be roadmap files for larger or long range plans.  We want to ensure the roadmap stays current and reflects the actual state of the project. As you work through each task and phase:
+    * Check off completed tasks (- [x]) as we finish them
+    * Add new tasks that emerge during implementation
+    * Move completed items to the "Completed Items" section
+    * Update the status emoji (⬜ → 🔄 → ✅) for each phase
+    * Add change log entries for significant updates
+
 ## Documentation
 - **JSDoc**: Document all JavaScript functions with JSDoc.
 - **Scheme Doc**: Document all Scheme functions with JSDoc-style comments, using the same format as JSDoc, but with Scheme procedure-level comment syntax (i.e. `;;`).
