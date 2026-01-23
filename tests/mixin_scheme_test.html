@@ -135,7 +135,7 @@
                     (define mixin-checks-orig
                       (js-obj 'action 
                         (lambda (orig) 
-                          (set! check-orig-result (if (undefined? orig) 'was-undefined 'was-defined)))))
+                          (set! check-orig-result (if (js-undefined? orig) 'was-undefined 'was-defined)))))
                     (define empty-target (js-obj))
                     (mixin mixin-checks-orig empty-target)
                     (empty-target.action)
@@ -154,6 +154,33 @@
                 `);
                 const initCalled = schemeEval('init-called');
                 assertTrue(initCalled, 'init was called by blockly-mixin');
+
+                // Test 6: Overwriting non-function property
+                log('\n--- Test 6: Overwriting non-function property ---');
+                schemeEval(`
+                    (define target-overwrite (js-obj 'val 10))
+                    (define mixin-overwrite (js-obj 'val 20))
+                    (mixin mixin-overwrite target-overwrite)
+                `);
+                const newVal = schemeEval('target-overwrite.val');
+                assertEqual(newVal, 20, 'Property overwritten correctly');
+
+                // Test 7: Multiple wrapping (chaining)
+                log('\n--- Test 7: Multiple function wrapping (chaining) ---');
+                schemeEval(`
+                    (define chain-target (js-obj 'process (lambda (x) (* x 2))))
+                    (define mixin-1 (js-obj 'process (lambda (orig x) (+ (orig x) 1))))   ;; (x*2) + 1
+                    (define mixin-2 (js-obj 'process (lambda (orig x) (* (orig x) 3))))   ;; ((x*2) + 1) * 3
+                    
+                    (mixin mixin-1 chain-target)
+                    (mixin mixin-2 chain-target)
+                `);
+                // If x=5:
+                // Original: 5*2 = 10
+                // Mixin 1: 10 + 1 = 11
+                // Mixin 2: 11 * 3 = 33
+                const chainResult = schemeEval('(chain-target.process 5)');
+                assertEqual(chainResult, 33, 'Functions chained correctly: ((5*2)+1)*3 = 33');
 
             } catch (e) {
                 log('\n❌ Error: ' + e.message, false);

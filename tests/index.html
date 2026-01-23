@@ -2,109 +2,150 @@
 <html>
 
 <head>
-    <title>Scheme Blocks Test Suite</title>
+    <title>Scheme Blocks Test Runner</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            max-width: 900px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
             margin: 40px auto;
-            padding: 0 20px;
-            background: #1e1e1e;
-            color: #d4d4d4;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
         }
 
         h1 {
-            color: #569cd6;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
         }
 
         h2 {
-            color: #4ec9b0;
+            color: #2980b9;
             margin-top: 30px;
         }
 
-        a {
-            color: #ce9178;
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
+        .test-group {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
         }
 
         ul {
-            line-height: 2;
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+        }
+
+        li:last-child {
+            border-bottom: none;
+        }
+
+        a {
+            text-decoration: none;
+            color: #2c3e50;
+            font-weight: 600;
+            font-size: 1.1em;
+            flex: 1;
+        }
+
+        a:hover {
+            color: #3498db;
         }
 
         .description {
-            color: #808080;
+            color: #7f8c8d;
             font-size: 0.9em;
+            margin-left: 20px;
         }
 
-        iframe {
-            width: 100%;
-            height: 500px;
-            border: 1px solid #444;
+        .tag {
+            background-color: #3498db;
+            color: white;
+            padding: 2px 8px;
             border-radius: 4px;
-            margin: 10px 0;
-            background: #1e1e1e;
+            font-size: 0.7em;
+            margin-right: 10px;
+            text-transform: uppercase;
         }
 
-        .note {
-            background: #2d2d2d;
-            border-left: 3px solid #569cd6;
-            padding: 10px 15px;
-            margin: 20px 0;
+        .tag.new {
+            background-color: #27ae60;
+        }
+
+        .tag.core {
+            background-color: #e67e22;
         }
     </style>
 </head>
 
 <body>
-    <h1>🧪 Scheme Blocks Test Suite</h1>
+    <h1>🧪 Scheme Blocks Test Runner</h1>
+    <p>Click on any test file below to run it in a new tab.</p>
 
-    <div class="note">
-        <strong>Note:</strong> This test suite has two parts:
+    <div class="test-group">
+        <h2>Core Feature Tests (Comprehensive Suite)</h2>
         <ul>
-            <li><strong>Node.js tests</strong> - Run with <code>npm test</code> (mixin utilities)</li>
-            <li><strong>Browser tests</strong> - View this page (Blockly blocks, code generation)</li>
+            <li>
+                <span class="tag new">New</span>
+                <a href="procedures_scheme_test.html" target="_blank">procedures_scheme_test.html</a>
+                <span class="description">Verifies 80+ Standard Procedures & Code Gen</span>
+            </li>
+            <li>
+                <span class="tag new">New</span>
+                <a href="mixin_scheme_test.html" target="_blank">mixin_scheme_test.html</a>
+                <span class="description">Mixins, Property Copying, Chaining, Null Checks</span>
+            </li>
+            <li>
+                <span class="tag new">New</span>
+                <a href="toolbox_test.html" target="_blank">toolbox_test.html</a>
+                <span class="description">Nested Toolbox Structure & Categories</span>
+            </li>
+            <li>
+                <span class="tag core">Core</span>
+                <a href="chameleon_test.html" target="_blank">chameleon_test.html</a>
+                <span class="description">Chameleon Block Dynamic Connections</span>
+            </li>
         </ul>
     </div>
 
-    <h2>Browser-Based Tests</h2>
-    <p>Click any test to run it in a new tab, or view them in iframes below:</p>
+    <div class="test-group">
+        <h2>Integration & System Tests</h2>
+        <ul>
+            <li>
+                <span class="tag">System</span>
+                <a href="scheme_integration_test.html" target="_blank">scheme_integration_test.html</a>
+                <span class="description">Scheme-JS Interop, DOM Access</span>
+            </li>
+            <li>
+                <span class="tag">System</span>
+                <a href="init_test.html" target="_blank">init_test.html</a>
+                <span class="description">Initialization & Global Exports</span>
+            </li>
+        </ul>
+    </div>
 
-    <ul>
-        <li>
-            <a href="blocks_test.html" target="_blank">blocks_test.html</a>
-            <span class="description">- Block definitions and code generation</span>
-        </li>
-        <li>
-            <a href="scheme_integration_test.html" target="_blank">scheme_integration_test.html</a>
-            <span class="description">- Scheme↔JavaScript and DOM access</span>
-        </li>
-    </ul>
+    <div class="test-group">
+        <h2>Legacy & Component Tests</h2>
+        <ul>
+            <li>
+                <a href="blocks_test.html" target="_blank">blocks_test.html</a>
+                <span class="description">Specific Block Definitions</span>
+            </li>
+            <li>
+                <a href="flydown_test.html" target="_blank">flydown_test.html</a>
+                <span class="description">Flydown Components (if applicable)</span>
+            </li>
+        </ul>
+    </div>
 
-    <h2>Block Definition Tests</h2>
-    <iframe src="blocks_test.html"></iframe>
-
-    <h2>Scheme Integration Tests</h2>
-    <iframe src="scheme_integration_test.html"></iframe>
-
-    <h2>Node.js Tests</h2>
-    <p>Run these in your terminal:</p>
-    <pre style="background: #2d2d2d; padding: 15px; border-radius: 4px;">
-npm test
-
-# Output:
-# 🧪 Running Scheme Blocks Test Suite
-# 🧪 Mixin Utilities
-#   ✅ Non-function properties are copied directly
-#   ✅ Function properties receive original as first arg
-#   ✅ Mixin function can call original function
-#   ✅ When target has no matching property, orig is undefined
-#   ✅ blocklyMixin calls mixin init function
-#   ✅ Original functions are bound to target context
-# 📊 6 passed, 0 failed
-  </pre>
 </body>
 
 </html>

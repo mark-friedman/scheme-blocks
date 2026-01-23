@@ -18,6 +18,11 @@ Implemented nested toolbox categories for the Scheme Blocks IDE, expanding from 
   - Predicates: eq?, eqv?, equal?, boolean?, procedure?...
   - Logic: not
 
+#### Comprehensive Test Suite
+- **[procedures_scheme_test.html](./tests/procedures_scheme_test.html)**: Added verification for all 80+ standard built-in procedures (registration and code generation).
+- **[mixin_scheme_test.html](./tests/mixin_scheme_test.html)**: Enhanced to test mixin robustness (overwriting, chaining, null checks).
+- **[tests/index.html](./tests/index.html)**: Created a Test Runner Dashboard for easy access to all browser-based tests.
+
 #### Nested Toolbox Implementation
 - **[procedures.scm](./src/blocks/procedures.scm)**: New `build-nested-toolbox` function:
   - Parses "Category/Subcategory" paths from procedure metadata

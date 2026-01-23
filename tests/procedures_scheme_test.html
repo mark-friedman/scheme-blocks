@@ -178,21 +178,68 @@
                 log('--- Test 7: Lambda code generator ---');
                 // TODO: Check schemeCodeGenerator.forBlock.procedures_lambda
 
-                // Test 8: Standard procedure blocks exist
-                log('--- Test 8: Standard procedure blocks ---');
-                assert(Blockly.Blocks['procedures_string-length'] !== undefined,
-                    'string-length procedure block exists');
-                assert(Blockly.Blocks['procedures_length'] !== undefined,
-                    'length procedure block exists');
+                // Test 8: Standard procedure blocks exist (Full Suite)
+                log('--- Test 8: Standard procedure blocks (80+ checks) ---');
+                const standardProcedures = [
+                    "+", "-", "*", "/", "abs", "quotient", "remainder", "modulo",
+                    "=", "<", ">", "<=", ">=", "max", "min",
+                    "zero?", "positive?", "negative?", "odd?", "even?", "number?", "integer?",
+                    "expt", "sqrt", "floor", "ceiling", "truncate", "round", "gcd", "lcm",
+                    "cons", "car", "cdr", "list", "length", "append", "reverse",
+                    "list-ref", "list-tail", "list-set!", "caar", "cadr", "cdar", "cddr",
+                    "memq", "memv", "member", "assq", "assv", "assoc",
+                    "null?", "pair?", "list?",
+                    "map", "for-each", "filter", "apply",
+                    "string-length", "string-ref", "substring", "string-append", "string-copy",
+                    "string=?", "string<?", "string>?", "string<=?", "string>=?",
+                    "string->list", "list->string", "number->string", "string->number", "symbol->string", "string->symbol",
+                    "string?",
+                    "make-vector", "vector", "vector-length", "vector-ref", "vector-set!", "vector->list", "list->vector", "vector?",
+                    "char->integer", "integer->char", "char=?", "char<?", "char>?", "char?",
+                    "display", "newline", "write", "read",
+                    "boolean?", "symbol?", "procedure?",
+                    "eq?", "eqv?", "equal?",
+                    "not"
+                ];
 
-                // Test 9: Code generation for string-length
-                log('--- Test 9: string-length code generation ---');
-                const strLenBlock = workspace.newBlock('procedures_string-length');
-                strLenBlock.initSvg();
-                strLenBlock.render();
-                const code = schemeCodeGenerator.forBlock['procedures_string-length'](strLenBlock);
-                assert(code !== undefined && code !== '',
-                    'string-length generates code: ' + code);
+                let missingProcs = [];
+                let genFailures = [];
+
+                for (const proc of standardProcedures) {
+                    const blockType = 'procedures_' + proc;
+                    if (Blockly.Blocks[blockType] === undefined) {
+                        missingProcs.push(proc);
+                    } else {
+                        // Test generation
+                        try {
+                            const block = workspace.newBlock(blockType);
+                            // We don't render them all to save time/DOM load, just init logic
+                            // block.initSvg(); 
+                            const code = schemeCodeGenerator.forBlock[blockType](block);
+                            // Code should be a string or [string, order]
+                            let codeStr = Array.isArray(code) ? code[0] : code;
+                            if (!codeStr || !codeStr.includes(proc)) {
+                                genFailures.push(`${proc} -> ${codeStr}`);
+                            }
+                            block.dispose();
+                        } catch (e) {
+                            genFailures.push(`${proc} ERROR: ${e.message}`);
+                        }
+                    }
+                }
+
+                if (missingProcs.length === 0) {
+                    log(`All ${standardProcedures.length} standard procedures registered.`, true);
+                } else {
+                    log(`Missing procedures: ${missingProcs.join(', ')}`, false);
+                }
+
+                if (genFailures.length === 0) {
+                    log(`Code generation verified for all ${standardProcedures.length} procedures.`, true);
+                } else {
+                    log(`Code generation failures:\n${genFailures.join('\n')}`, false);
+                }
+
 
                 // Test 10: Chameleon mixin works
                 log('--- Test 10: Chameleon mixin integration ---');
