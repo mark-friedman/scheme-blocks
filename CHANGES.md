@@ -1,5 +1,63 @@
 # CHANGES.md
 
+## 2026-01-22: Phase 1 - Nested Toolbox Organization & Chameleon Mixin Fixes
+
+### Summary
+Implemented nested toolbox categories for the Scheme Blocks IDE, expanding from 2 built-in procedures to 80+ R7RS procedures organized by domain. Also fixed critical chameleon mixin issues that prevented proper block connection behavior.
+
+### Changes
+
+#### Procedure Block Expansion
+- **[procedures.scm](./src/blocks/procedures.scm)**: Expanded `standard-builtins` from 2 to 80+ R7RS procedures:
+  - Math: +, -, *, /, abs, quotient, =, <, >, zero?, sqrt, expt...
+  - Lists: cons, car, cdr, list-ref, memq, assoc, map, filter...
+  - Strings: string-length, substring, string=?, string->list...
+  - Vectors: make-vector, vector-ref, vector-set!...
+  - Characters: char->integer, char=?...
+  - I/O: display, newline, write, read
+  - Predicates: eq?, eqv?, equal?, boolean?, procedure?...
+  - Logic: not
+
+#### Nested Toolbox Implementation
+- **[procedures.scm](./src/blocks/procedures.scm)**: New `build-nested-toolbox` function:
+  - Parses "Category/Subcategory" paths from procedure metadata
+  - Special handling for "I/O" (not split on `/`)
+  - Builds hierarchical category structure dynamically
+  - Assigns distinct colors per top-level category
+
+#### Procedure Block Refactoring
+- **[procedures.scm](./src/blocks/procedures.scm)**: Split `procedure-call-base` into:
+  - `specific-procedure-call-block` - for built-in procedures (no mutator)
+  - `generic-procedure-call-block` - for dynamic args with mutator
+  - Fixes "ARG0 removeInput" error when placing blocks
+
+#### Chameleon Mixin Fixes
+- **[mixins.scm](./src/blocks/mixins.scm)**: Fixed three critical issues:
+  1. **Null Truthiness**: JS `null` is truthy in Scheme-JS - fixed with `js-null?`/`js-undefined?` checks
+  2. **Method Calls**: `getPreviousBlock`, `targetBlock` were read as properties - fixed to call as methods
+  3. **Connected Blocks**: `setConnections` tried to remove in-use connections - added `isConnected` checks
+
+#### New Tests
+- **[chameleon_test.scm](./tests/chameleon_test.scm) [NEW]**: Comprehensive chameleon mixin tests
+- **[chameleon_test.html](./tests/chameleon_test.html) [NEW]**: HTML test runner
+
+### Verification Results
+
+#### Nested Toolbox
+- ✅ Build succeeds
+- ✅ Nested categories render correctly
+- ✅ Subcategories expand on click
+- ✅ Blocks appear in correct subcategories
+- ✅ I/O displays as single category
+
+#### Chameleon Mixin
+- ✅ **Initial**: All connections (output, prev, next)  
+- ✅ **Statement mode**: Output removed, prev/next kept
+- ✅ **Expression mode**: Prev/next removed, output kept
+- ✅ **Re-chameleonize**: All connections restored after disconnect
+
+---
+
 ## 2026-01-20: Convert index.js to Scheme-JS and Add unit tests
 
 Converted the Blockly initialization logic from JavaScript (`index.js`) to Scheme-JS (`init.scm`). This aligns with the "Scheme over JS" rule and demonstrates the power of the `scheme-js` interop features.
