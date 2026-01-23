@@ -188,30 +188,44 @@
 ;; Block: procedures_generic_call
 ;; ---------------------------------------------------------------------------
 
-;; Create a procedure call block (generic or specific)
-;; @param {boolean} is-generic - Whether this is a generic call block
-;; @param {string|undefined} block-name - Name of the specific procedure (if not generic)
-;; @param {list|undefined} arg-names - Argument names for specific procedures
+;; Create a specific procedure call block (for built-in procedures with known args)
+;; @param {string} block-name - Name of the procedure
+;; @param {list} arg-names - Argument names for the procedure
 ;; @returns {Object} Block definition object
-(define (procedure-call-base is-generic block-name arg-names)
+(define (specific-procedure-call-block block-name arg-names)
   #{(init
       (lambda ()
-        (if is-generic
-            (((this.appendValueInput "PROC").setCheck "procedure").appendField "call")
-            (begin
-              ;; Build the input with chained appendField calls
-              (let* ((input (this.appendDummyInput))
-                     (field1 (input.appendField "call"))
-                     (field2 (field1.appendField (make-standard-procedure-name-flydown block-name))))
-                (field2.appendField "with"))
-              (when arg-names
-                (for-each 
-                  (lambda (arg-name)
-                    (let* ((input (this.appendValueInput arg-name))
-                           (checked (input.setCheck js-null))
-                           (aligned (checked.setAlign Blockly.inputs.Align.RIGHT)))
-                      (aligned.appendField arg-name)))
-                  arg-names))))
+        ;; Build the input with chained appendField calls
+        (let* ((input (this.appendDummyInput))
+               (field1 (input.appendField "call"))
+               (field2 (field1.appendField (make-standard-procedure-name-flydown block-name))))
+          (field2.appendField "with"))
+        (when arg-names
+          (for-each 
+            (lambda (arg-name)
+              (let* ((input (this.appendValueInput arg-name))
+                     (checked (input.setCheck js-null))
+                     (aligned (checked.setAlign Blockly.inputs.Align.RIGHT)))
+                (aligned.appendField arg-name)))
+            arg-names))
+        
+        ;; Use our Scheme chameleon mixin!
+        (blockly-mixin window.chameleonMixin this)
+        
+        (this.setColour 230)
+        (this.setTooltip "Calls a procedure!")
+        (this.setStyle "procedure_blocks")))
+
+    (getGlobalNames
+      (lambda ()
+        (vector block-name)))})
+
+;; Create the generic procedure call block (with mutator for dynamic args)
+;; @returns {Object} Block definition object
+(define (generic-procedure-call-block)
+  #{(init
+      (lambda ()
+        (((this.appendValueInput "PROC").setCheck "procedure").appendField "call")
         
         ;; Use our Scheme chameleon mixin!
         (blockly-mixin window.chameleonMixin this)
@@ -222,14 +236,10 @@
         (this.setTooltip "Calls a procedure!")
         (this.setStyle "procedure_blocks")
         
-        (when is-generic
-          (this.setMutator (js-new Blockly.icons.MutatorIcon #("procedures_call_item") this)))))
+        (this.setMutator (js-new Blockly.icons.MutatorIcon #("procedures_call_item") this))))
 
     (getGlobalNames
-      (lambda ()
-        (if (and (not is-generic) block-name)
-            (vector block-name)
-            #())))
+      (lambda () #()))
             
     (saveExtraState
        (lambda ()
@@ -303,7 +313,7 @@
          (set! this.itemCount (string->number (xml-element.getAttribute "itemCount")))
          (this.updateShape)))})
 
-(set! Blockly.Blocks.procedures_generic_call (procedure-call-base #t #f #f))
+(set! Blockly.Blocks.procedures_generic_call (generic-procedure-call-block))
 
 ;; ---------------------------------------------------------------------------
 ;; Mutator blocks for generic call
@@ -356,19 +366,157 @@
 ;; Standard Procedures (Built-ins)
 ;; ---------------------------------------------------------------------------
 
-;; Define standard built-in procedures
+;; Define standard built-in procedures organized by category
+;; Each entry: #{ (name "proc") (category "Cat/Subcat") (argNames #("a" "b")) }
+;; Category format: "TopLevel" or "TopLevel/Subcategory"
+
 (define standard-builtins
   (list 
-    #{ (name "string-length") (category "Strings") (argNames #("string")) }
-    #{ (name "length") (category "Lists") (argNames #("list")) }))
+    ;; --- Math / Arithmetic ---
+    #{ (name "+") (category "Math/Arithmetic") (argNames #("a" "b")) }
+    #{ (name "-") (category "Math/Arithmetic") (argNames #("a" "b")) }
+    #{ (name "*") (category "Math/Arithmetic") (argNames #("a" "b")) }
+    #{ (name "/") (category "Math/Arithmetic") (argNames #("a" "b")) }
+    #{ (name "abs") (category "Math/Arithmetic") (argNames #("n")) }
+    #{ (name "quotient") (category "Math/Arithmetic") (argNames #("n" "d")) }
+    #{ (name "remainder") (category "Math/Arithmetic") (argNames #("n" "d")) }
+    #{ (name "modulo") (category "Math/Arithmetic") (argNames #("n" "d")) }
+    
+    ;; --- Math / Comparison ---
+    #{ (name "=") (category "Math/Comparison") (argNames #("a" "b")) }
+    #{ (name "<") (category "Math/Comparison") (argNames #("a" "b")) }
+    #{ (name ">") (category "Math/Comparison") (argNames #("a" "b")) }
+    #{ (name "<=") (category "Math/Comparison") (argNames #("a" "b")) }
+    #{ (name ">=") (category "Math/Comparison") (argNames #("a" "b")) }
+    #{ (name "max") (category "Math/Comparison") (argNames #("a" "b")) }
+    #{ (name "min") (category "Math/Comparison") (argNames #("a" "b")) }
+    
+    ;; --- Math / Predicates ---
+    #{ (name "zero?") (category "Math/Predicates") (argNames #("n")) }
+    #{ (name "positive?") (category "Math/Predicates") (argNames #("n")) }
+    #{ (name "negative?") (category "Math/Predicates") (argNames #("n")) }
+    #{ (name "odd?") (category "Math/Predicates") (argNames #("n")) }
+    #{ (name "even?") (category "Math/Predicates") (argNames #("n")) }
+    #{ (name "number?") (category "Math/Predicates") (argNames #("obj")) }
+    #{ (name "integer?") (category "Math/Predicates") (argNames #("obj")) }
+    
+    ;; --- Math / Advanced ---
+    #{ (name "expt") (category "Math/Advanced") (argNames #("base" "exp")) }
+    #{ (name "sqrt") (category "Math/Advanced") (argNames #("n")) }
+    #{ (name "floor") (category "Math/Advanced") (argNames #("n")) }
+    #{ (name "ceiling") (category "Math/Advanced") (argNames #("n")) }
+    #{ (name "truncate") (category "Math/Advanced") (argNames #("n")) }
+    #{ (name "round") (category "Math/Advanced") (argNames #("n")) }
+    #{ (name "gcd") (category "Math/Advanced") (argNames #("a" "b")) }
+    #{ (name "lcm") (category "Math/Advanced") (argNames #("a" "b")) }
+    
+    ;; --- Lists / Basic ---
+    #{ (name "cons") (category "Lists/Basic") (argNames #("a" "b")) }
+    #{ (name "car") (category "Lists/Basic") (argNames #("pair")) }
+    #{ (name "cdr") (category "Lists/Basic") (argNames #("pair")) }
+    #{ (name "list") (category "Lists/Basic") (argNames #("items...")) }
+    #{ (name "length") (category "Lists/Basic") (argNames #("list")) }
+    #{ (name "append") (category "Lists/Basic") (argNames #("list1" "list2")) }
+    #{ (name "reverse") (category "Lists/Basic") (argNames #("list")) }
+    
+    ;; --- Lists / Access ---
+    #{ (name "list-ref") (category "Lists/Access") (argNames #("list" "k")) }
+    #{ (name "list-tail") (category "Lists/Access") (argNames #("list" "k")) }
+    #{ (name "list-set!") (category "Lists/Access") (argNames #("list" "k" "val")) }
+    #{ (name "caar") (category "Lists/Access") (argNames #("pair")) }
+    #{ (name "cadr") (category "Lists/Access") (argNames #("pair")) }
+    #{ (name "cdar") (category "Lists/Access") (argNames #("pair")) }
+    #{ (name "cddr") (category "Lists/Access") (argNames #("pair")) }
+    
+    ;; --- Lists / Search ---
+    #{ (name "memq") (category "Lists/Search") (argNames #("obj" "list")) }
+    #{ (name "memv") (category "Lists/Search") (argNames #("obj" "list")) }
+    #{ (name "member") (category "Lists/Search") (argNames #("obj" "list")) }
+    #{ (name "assq") (category "Lists/Search") (argNames #("key" "alist")) }
+    #{ (name "assv") (category "Lists/Search") (argNames #("key" "alist")) }
+    #{ (name "assoc") (category "Lists/Search") (argNames #("key" "alist")) }
+    
+    ;; --- Lists / Predicates ---
+    #{ (name "null?") (category "Lists/Predicates") (argNames #("obj")) }
+    #{ (name "pair?") (category "Lists/Predicates") (argNames #("obj")) }
+    #{ (name "list?") (category "Lists/Predicates") (argNames #("obj")) }
+    
+    ;; --- Lists / Higher-Order ---
+    #{ (name "map") (category "Lists/Higher-Order") (argNames #("proc" "list")) }
+    #{ (name "for-each") (category "Lists/Higher-Order") (argNames #("proc" "list")) }
+    #{ (name "filter") (category "Lists/Higher-Order") (argNames #("pred" "list")) }
+    #{ (name "apply") (category "Lists/Higher-Order") (argNames #("proc" "args")) }
+    
+    ;; --- Strings / Basic ---
+    #{ (name "string-length") (category "Strings/Basic") (argNames #("string")) }
+    #{ (name "string-ref") (category "Strings/Basic") (argNames #("string" "k")) }
+    #{ (name "substring") (category "Strings/Basic") (argNames #("string" "start" "end")) }
+    #{ (name "string-append") (category "Strings/Basic") (argNames #("s1" "s2")) }
+    #{ (name "string-copy") (category "Strings/Basic") (argNames #("string")) }
+    
+    ;; --- Strings / Comparison ---
+    #{ (name "string=?") (category "Strings/Comparison") (argNames #("s1" "s2")) }
+    #{ (name "string<?") (category "Strings/Comparison") (argNames #("s1" "s2")) }
+    #{ (name "string>?") (category "Strings/Comparison") (argNames #("s1" "s2")) }
+    #{ (name "string<=?") (category "Strings/Comparison") (argNames #("s1" "s2")) }
+    #{ (name "string>=?") (category "Strings/Comparison") (argNames #("s1" "s2")) }
+    
+    ;; --- Strings / Conversion ---
+    #{ (name "string->list") (category "Strings/Conversion") (argNames #("string")) }
+    #{ (name "list->string") (category "Strings/Conversion") (argNames #("list")) }
+    #{ (name "number->string") (category "Strings/Conversion") (argNames #("n")) }
+    #{ (name "string->number") (category "Strings/Conversion") (argNames #("string")) }
+    #{ (name "symbol->string") (category "Strings/Conversion") (argNames #("symbol")) }
+    #{ (name "string->symbol") (category "Strings/Conversion") (argNames #("string")) }
+    
+    ;; --- Strings / Predicates ---
+    #{ (name "string?") (category "Strings/Predicates") (argNames #("obj")) }
+    
+    ;; --- Vectors ---
+    #{ (name "make-vector") (category "Vectors") (argNames #("k" "fill")) }
+    #{ (name "vector") (category "Vectors") (argNames #("items...")) }
+    #{ (name "vector-length") (category "Vectors") (argNames #("vec")) }
+    #{ (name "vector-ref") (category "Vectors") (argNames #("vec" "k")) }
+    #{ (name "vector-set!") (category "Vectors") (argNames #("vec" "k" "val")) }
+    #{ (name "vector->list") (category "Vectors") (argNames #("vec")) }
+    #{ (name "list->vector") (category "Vectors") (argNames #("list")) }
+    #{ (name "vector?") (category "Vectors") (argNames #("obj")) }
+    
+    ;; --- Characters ---
+    #{ (name "char->integer") (category "Characters") (argNames #("char")) }
+    #{ (name "integer->char") (category "Characters") (argNames #("n")) }
+    #{ (name "char=?") (category "Characters") (argNames #("c1" "c2")) }
+    #{ (name "char<?") (category "Characters") (argNames #("c1" "c2")) }
+    #{ (name "char>?") (category "Characters") (argNames #("c1" "c2")) }
+    #{ (name "char?") (category "Characters") (argNames #("obj")) }
+    
+    ;; --- I/O ---
+    #{ (name "display") (category "I/O") (argNames #("obj")) }
+    #{ (name "newline") (category "I/O") (argNames #()) }
+    #{ (name "write") (category "I/O") (argNames #("obj")) }
+    #{ (name "read") (category "I/O") (argNames #()) }
+    
+    ;; --- Predicates / Type ---
+    #{ (name "boolean?") (category "Predicates") (argNames #("obj")) }
+    #{ (name "symbol?") (category "Predicates") (argNames #("obj")) }
+    #{ (name "procedure?") (category "Predicates") (argNames #("obj")) }
+    
+    ;; --- Predicates / Equality ---
+    #{ (name "eq?") (category "Predicates") (argNames #("a" "b")) }
+    #{ (name "eqv?") (category "Predicates") (argNames #("a" "b")) }
+    #{ (name "equal?") (category "Predicates") (argNames #("a" "b")) }
+    
+    ;; --- Logic ---
+    #{ (name "not") (category "Logic") (argNames #("obj")) }
+  ))
 
 ;; Register blocks and generators for standard built-ins
 (for-each 
   (lambda (proc-info)
     (let ((block-type (string-append "procedures_" proc-info.name)))
-      ;; Define Block - convert vector to list for arg-names
+      ;; Define Block using the specific procedure call block
       (js-set! Blockly.Blocks block-type
-         (procedure-call-base #f proc-info.name (vector->list proc-info.argNames)))
+         (specific-procedure-call-block proc-info.name (vector->list proc-info.argNames)))
          
       ;; Define Generator
       (js-set! schemeCodeGenerator.forBlock block-type
@@ -388,46 +536,122 @@
   standard-builtins)
 
 ;; ---------------------------------------------------------------------------
-;; Toolbox Definition
+;; Toolbox Definition - Nested Categories
 ;; ---------------------------------------------------------------------------
 
-(define standard-procedure-toolbox-json
-  #{ (kind "categoryToolbox")
-     (contents (vector
-       #{ (kind "category") 
-          (name "Strings") 
-          (contents (vector #{ (kind "block") (type "text") })) }
-       #{ (kind "category") 
-          (name "Lists") 
-          (contents #()) }
-       #{ (kind "category") 
-          (name "Variables") 
-          (contents (vector
-            #{ (kind "block") (type "global_declaration") }
-            #{ (kind "block") (type "local_declaration_statement") }
-            #{ (kind "block") (type "local_declaration_expression") }
-            #{ (kind "block") (type "lexical_variable_get") }
-            #{ (kind "block") (type "lexical_variable_set") })) }
-       #{ (kind "category") 
-          (name "Functions") 
-          (custom "PROCEDURE") }
-     )) })
+;; Helper: Parse "Category/Subcategory" into components
+;; Special handling for "I/O" which should not be split
+(define (parse-category-path path)
+  (cond
+    ((equal? path "I/O") (vector "I/O" #f))
+    ((path.includes "/")
+     (let ((idx (path.indexOf "/")))
+       (vector (path.substring 0 idx)
+               (path.substring (+ idx 1)))))
+    (else (vector path #f))))
 
-;; Populate toolbox with standard procedure blocks
-;; @private
-(define (gen-toolbox-procedures)
+;; Build nested category structure from standard-builtins
+(define (build-nested-toolbox)
+  ;; Create category hierarchy as JS object for easy lookup
+  (define categories (js-eval "({})"))
+  
+  ;; Process each builtin and build category structure
   (for-each
     (lambda (proc-info)
-      (let* ((cat-name proc-info.category)
-             (block-type (string-append "procedures_" proc-info.name))
-             (cat-obj (standard-procedure-toolbox-json.contents.find
-                         (lambda (cat) (equal? cat.name cat-name)))))
-        (if (not (js-undefined? cat-obj))
-            (cat-obj.contents.unshift #{ (kind "block") (type block-type) })
-            (console.warn (string-append "Category " cat-name " not found")))))
-    standard-builtins))
+      (let* ((path-parts (parse-category-path proc-info.category))
+             (top-cat (vector-ref path-parts 0))
+             (sub-cat (vector-ref path-parts 1))
+             (block-entry (js-eval "({})")))
+        
+        ;; Build block entry
+        (js-set! block-entry "kind" "block")
+        (js-set! block-entry "type" (string-append "procedures_" proc-info.name))
+        
+        ;; Ensure top-level category exists
+        (when (js-undefined? (js-ref categories top-cat))
+          (let ((cat-obj (js-eval "({})")))
+            (js-set! cat-obj "name" top-cat)
+            (js-set! cat-obj "subcategories" (js-eval "({})"))
+            (js-set! cat-obj "blocks" (js-eval "([])"))
+            (js-set! categories top-cat cat-obj)))
+        
+        (let ((top-obj (js-ref categories top-cat)))
+          (if sub-cat
+              ;; Has subcategory - add to subcategory
+              (begin
+                (when (js-undefined? (js-ref top-obj.subcategories sub-cat))
+                  (js-set! top-obj.subcategories sub-cat (js-eval "([])")))
+                ((js-ref top-obj.subcategories sub-cat).push block-entry))
+              ;; No subcategory - add directly to top category
+              (top-obj.blocks.push block-entry)))))
+    standard-builtins)
+  
+  ;; Convert to Blockly toolbox format
+  (define (category-to-toolbox-entry name cat-obj colour)
+    (let* ((subcats (Object.keys cat-obj.subcategories))
+           (has-subcats (> (vector-length subcats) 0))
+           (result (js-eval "({})")))
+      
+      (js-set! result "kind" "category")
+      (js-set! result "name" name)
+      (js-set! result "colour" colour)
+      
+      (if has-subcats
+          ;; Has subcategories - create nested structure
+          (let ((items (js-eval "([])")))
+            ;; Add direct blocks first
+            (for-each (lambda (b) (items.push b)) (vector->list cat-obj.blocks))
+            ;; Add subcategory entries
+            (for-each
+              (lambda (sub-name)
+                (let ((sub-entry (js-eval "({})")))
+                  (js-set! sub-entry "kind" "category")
+                  (js-set! sub-entry "name" sub-name)
+                  (js-set! sub-entry "colour" colour)
+                  (js-set! sub-entry "contents" (js-ref cat-obj.subcategories sub-name))
+                  (items.push sub-entry)))
+              (vector->list subcats))
+            (js-set! result "contents" items))
+          ;; No subcategories - flat category
+          (js-set! result "contents" cat-obj.blocks))
+      result))
+  
+  ;; Build final toolbox with category colors
+  (define category-colours
+    #{ (Math 230) (Lists 260) (Strings 160) (Vectors 290) 
+       (Characters 20) (I/O 330) (Predicates 65) (Logic 210) })
+  
+  (let ((contents (js-eval "([])")))
+    (for-each
+      (lambda (cat-name)
+        (let ((cat-obj (js-ref categories cat-name))
+              (colour (or (js-ref category-colours cat-name) 230)))
+          (contents.push (category-to-toolbox-entry cat-name cat-obj colour))))
+      (vector->list (Object.keys categories)))
+    
+    ;; Add Variables and Functions categories
+    (contents.push
+      #{ (kind "category") 
+         (name "Variables") 
+         (colour 330)
+         (contents (vector
+           #{ (kind "block") (type "global_declaration") }
+           #{ (kind "block") (type "local_declaration_statement") }
+           #{ (kind "block") (type "local_declaration_expression") }
+           #{ (kind "block") (type "lexical_variable_get") }
+           #{ (kind "block") (type "lexical_variable_set") })) })
+    
+    (contents.push
+      #{ (kind "category") 
+         (name "Functions") 
+         (colour 290)
+         (custom "PROCEDURE") })
+    
+    #{ (kind "categoryToolbox") (contents contents) }))
 
-(gen-toolbox-procedures)
+(define standard-procedure-toolbox-json (build-nested-toolbox))
+
+
 
 (set! window.standardProcedureToolboxJson standard-procedure-toolbox-json)
 

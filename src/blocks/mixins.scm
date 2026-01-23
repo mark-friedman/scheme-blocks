@@ -39,20 +39,32 @@
         (when (function? orig-set-connections)
           (orig-set-connections))
         ;; Handle previous/next connections
+        ;; Note: Use js-null? because JavaScript null is truthy in Scheme
         (if this.hasPreviousAndNext
             (begin
-              (unless this.nextConnection
+              (when (or (js-null? this.nextConnection) (js-undefined? this.nextConnection))
                 (this.setNextStatement #t))
-              (unless this.previousConnection
+              (when (or (js-null? this.previousConnection) (js-undefined? this.previousConnection))
                 (this.setPreviousStatement #t)))
             (begin
-              (this.setNextStatement #f)
-              (this.setPreviousStatement #f)))
+              ;; Only remove connections if they're not currently in use
+              (when (and (not (js-null? this.nextConnection))
+                         (not (js-undefined? this.nextConnection))
+                         (not (this.nextConnection.isConnected)))
+                (this.setNextStatement #f))
+              (when (and (not (js-null? this.previousConnection))
+                         (not (js-undefined? this.previousConnection))
+                         (not (this.previousConnection.isConnected)))
+                (this.setPreviousStatement #f))))
         ;; Handle output connection
         (if this.hasOutput
-            (unless this.outputConnection
+            (when (or (js-null? this.outputConnection) (js-undefined? this.outputConnection))
               (this.setOutput #t))
-            (this.setOutput #f))))
+            ;; Only remove output if it's not currently in use
+            (when (and (not (js-null? this.outputConnection))
+                       (not (js-undefined? this.outputConnection))
+                       (not (this.outputConnection.isConnected)))
+              (this.setOutput #f)))))
 
     (onPendingConnection
       (lambda (orig-on-pending-connection closest-connection)
@@ -69,13 +81,18 @@
           ;; Reset to all connections
           (set! this.hasPreviousAndNext #t)
           (set! this.hasOutput #t)
-          ;; Check if connected as output
-          (when (and this.outputConnection
-                     (this.outputConnection.targetBlock))
-            (set! this.hasPreviousAndNext #f))
-          ;; Check if connected as statement
-          (when (or (this.getPreviousBlock) (this.getNextBlock))
-            (set! this.hasOutput #f))
+          ;; Check if connected as output - call targetBlock() as method
+          (when (and (not (js-null? this.outputConnection))
+                     (not (js-undefined? this.outputConnection)))
+            (let ((target ((js-ref this.outputConnection "targetBlock"))))
+              (when (and (not (js-null? target)) (not (js-undefined? target)))
+                (set! this.hasPreviousAndNext #f))))
+          ;; Check if connected as statement - call methods properly
+          (let ((prev-block (this.getPreviousBlock))
+                (next-block (this.getNextBlock)))
+            (when (or (and (not (js-null? prev-block)) (not (js-undefined? prev-block)))
+                      (and (not (js-null? next-block)) (not (js-undefined? next-block))))
+              (set! this.hasOutput #f)))
           (this.updateShape))))
 
     (saveExtraState
