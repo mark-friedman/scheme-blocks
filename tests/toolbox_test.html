@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Nested Toolbox Tests</title>
+    <!-- Load Blockly from webpack bundle (in-memory) -->
+    <script type="text/javascript" src="/index.js"></script>
+    <!-- Load Scheme -->
+    <script type="module" src="../libs/scheme.js"></script>
+    <script type="module" src="../libs/scheme-html.js"></script>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+        }
+
+        .pass {
+            color: green;
+        }
+
+        .fail {
+            color: red;
+        }
+
+        #results {
+            white-space: pre-wrap;
+        }
+
+        #blocklyDiv {
+            height: 400px;
+            width: 100%;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Nested Toolbox Tests</h1>
+    <p>Tests for nested toolbox category structure and block organization.</p>
+    <div id="blocklyDiv"></div>
+    <div id="results"></div>
+
+    <script type="module">
+        import { schemeEval } from '../libs/scheme.js';
+
+        const results = document.getElementById('results');
+        let passed = 0;
+        let failed = 0;
+
+        function log(msg, isPass = null) {
+            const div = document.createElement('div');
+            if (isPass === true) {
+                div.className = 'pass';
+                div.textContent = '✅ ' + msg;
+                passed++;
+            } else if (isPass === false) {
+                div.className = 'fail';
+                div.textContent = '❌ ' + msg;
+                failed++;
+            } else {
+                div.textContent = msg;
+            }
+            results.appendChild(div);
+        }
+
+        function assert(condition, testName) {
+            if (condition) {
+                log(`${testName}`, true);
+            } else {
+                log(`${testName}: FAILED`, false);
+            }
+        }
+
+        function assertContains(arr, item, testName) {
+            if (arr && arr.includes(item)) {
+                log(`${testName}`, true);
+            } else {
+                log(`${testName}: ${item} not found in ${JSON.stringify(arr)}`, false);
+            }
+        }
+
+        async function loadSchemeFile(path) {
+            const response = await fetch(path);
+            const code = await response.text();
+            return schemeEval(code);
+        }
+
+        async function runTests() {
+            log('=== Nested Toolbox Tests ===\n');
+
+            // Wait for Blockly to be ready
+            if (typeof Blockly === 'undefined') {
+                log('Waiting for Blockly to load...');
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+
+            // Initialize global Scheme generator required by procedures.scm
+            window.schemeCodeGenerator = new Blockly.Generator('Scheme');
+
+            try {
+                // Load Scheme files
+                log('Loading mixin.scm...');
+                await loadSchemeFile('../src/utils/mixin.scm');
+                log('Loading mixins.scm...');
+                await loadSchemeFile('../src/blocks/mixins.scm');
+                log('Loading procedures.scm...');
+                await loadSchemeFile('../src/blocks/procedures.scm');
+                log('Loaded successfully.\n');
+
+                // Test 1: standardProcedureToolboxJson exists
+                log('--- Test 1: Toolbox JSON exists ---');
+                assert(window.standardProcedureToolboxJson !== undefined,
+                    'standardProcedureToolboxJson is defined');
+
+                const isArray = Array.isArray(window.standardProcedureToolboxJson);
+                const isCategoryToolbox = typeof window.standardProcedureToolboxJson === 'object' &&
+                    window.standardProcedureToolboxJson.kind === 'categoryToolbox';
+
+                assert(isArray || isCategoryToolbox,
+                    'standardProcedureToolboxJson is valid (array or categoryToolbox)');
+
+                // Test 2: Has top-level categories
+                log('\n--- Test 2: Top-level categories ---');
+                const toolboxObj = window.standardProcedureToolboxJson;
+                // Handle both array (flyout) and object (category toolbox) formats
+                const toolbox = Array.isArray(toolboxObj) ? toolboxObj : toolboxObj.contents;
+
+                assert(Array.isArray(toolbox), 'Toolbox contents is an array');
+                const categoryNames = toolbox.map(c => c.name);
+
+                assertContains(categoryNames, 'Math', 'Has Math category');
+                assertContains(categoryNames, 'Lists', 'Has Lists category');
+                assertContains(categoryNames, 'Strings', 'Has Strings category');
+                assertContains(categoryNames, 'Vectors', 'Has Vectors category');
+                assertContains(categoryNames, 'Characters', 'Has Characters category');
+                assertContains(categoryNames, 'I/O', 'Has I/O category');
+                assertContains(categoryNames, 'Predicates', 'Has Predicates category');
+                assertContains(categoryNames, 'Logic', 'Has Logic category');
+
+                // Test 3: Math has subcategories
+                log('\n--- Test 3: Math subcategories ---');
+                const mathCategory = toolbox.find(c => c.name === 'Math');
+                assert(mathCategory !== undefined, 'Math category found');
+                assert(mathCategory.contents !== undefined, 'Math has contents');
+
+                const mathSubcategories = mathCategory.contents
+                    .filter(item => item.kind === 'category')
+                    .map(c => c.name);
+
+                assertContains(mathSubcategories, 'Arithmetic', 'Math has Arithmetic subcategory');
+                assertContains(mathSubcategories, 'Comparison', 'Math has Comparison subcategory');
+
+                // Test 4: Lists has subcategories  
+                log('\n--- Test 4: Lists subcategories ---');
+                const listsCategory = toolbox.find(c => c.name === 'Lists');
+                assert(listsCategory !== undefined, 'Lists category found');
+
+                const listsSubcategories = listsCategory.contents
+                    .filter(item => item.kind === 'category')
+                    .map(c => c.name);
+
+                assertContains(listsSubcategories, 'Basic', 'Lists has Basic subcategory');
+                assertContains(listsSubcategories, 'Higher-Order', 'Lists has Higher-Order subcategory');
+
+                // Test 5: I/O is NOT split (special case)
+                log('\n--- Test 5: I/O not split ---');
+                const ioCategory = toolbox.find(c => c.name === 'I/O');
+                assert(ioCategory !== undefined, 'I/O category found');
+
+                // I/O should have blocks directly, not subcategories
+                const ioBlocks = ioCategory.contents.filter(item => item.kind === 'block');
+                const ioSubcats = ioCategory.contents.filter(item => item.kind === 'category');
+
+                assert(ioBlocks.length > 0, 'I/O has direct block definitions');
+                assert(ioSubcats.length === 0, 'I/O has no subcategories');
+
+                // Test 6: Categories have distinct colors
+                log('\n--- Test 6: Category colors ---');
+                const colors = new Set(toolbox.map(c => c.colour));
+                assert(colors.size >= 5, `At least 5 distinct colors used (got ${colors.size})`);
+
+                // Test 7: Blocks are registered
+                log('\n--- Test 7: Block registration ---');
+                assert(Blockly.Blocks['procedures_+'] !== undefined, 'procedures_+ registered');
+                assert(Blockly.Blocks['procedures_cons'] !== undefined, 'procedures_cons registered');
+                assert(Blockly.Blocks['procedures_string-length'] !== undefined, 'procedures_string-length registered');
+                assert(Blockly.Blocks['procedures_display'] !== undefined, 'procedures_display registered');
+
+                // Test 8: Create workspace with nested toolbox
+                log('\n--- Test 8: Workspace injection ---');
+                const workspace = Blockly.inject('blocklyDiv', {
+                    toolbox: {
+                        kind: 'categoryToolbox',
+                        contents: window.standardProcedureToolboxJson
+                    }
+                });
+                assert(workspace !== null, 'Workspace created with nested toolbox');
+
+                // Test 9: Can create blocks from nested categories
+                log('\n--- Test 9: Block creation ---');
+                const plusBlock = workspace.newBlock('procedures_+');
+                plusBlock.initSvg();
+                plusBlock.render();
+                assert(plusBlock !== null, 'Created + block from Math/Arithmetic');
+
+                const consBlock = workspace.newBlock('procedures_cons');
+                consBlock.initSvg();
+                consBlock.render();
+                assert(consBlock !== null, 'Created cons block from Lists/Basic');
+
+                // Test 10: Code generation works
+                log('\n--- Test 10: Code generation ---');
+                const code = schemeCodeGenerator.forBlock['procedures_+'](plusBlock);
+                assert(code !== undefined && code !== '', 'Code generator produces output');
+
+            } catch (e) {
+                log('\n❌ Error: ' + e.message, false);
+                console.error(e);
+            }
+
+            // Summary
+            log('\n=== Summary ===');
+            log(`${passed} passed, ${failed} failed`);
+        }
+
+        // Wait for everything to load
+        setTimeout(runTests, 2000);
+    </script>
+</body>
+
+</html>

@@ -2,89 +2,226 @@
 <html>
 
 <head>
-    <meta charset="utf-8">
     <title>Chameleon Mixin Tests</title>
+    <!-- Load Blockly from webpack bundle (in-memory) -->
+    <script type="text/javascript" src="/index.js"></script>
+    <!-- Load Scheme -->
+    <script type="module" src="../libs/scheme.js"></script>
+    <script type="module" src="../libs/scheme-html.js"></script>
     <style>
         body {
-            font-family: system-ui, sans-serif;
+            font-family: monospace;
             padding: 20px;
         }
 
-        #blocklyDiv {
-            height: 400px;
-            width: 100%;
-            border: 1px solid #ccc;
-            margin-bottom: 20px;
+        .pass {
+            color: green;
         }
 
-        .log {
-            font-family: monospace;
-            white-space: pre-wrap;
-        }
-
-        .error {
+        .fail {
             color: red;
         }
 
-        .success {
-            color: green;
+        #results {
+            white-space: pre-wrap;
+        }
+
+        #blocklyDiv {
+            height: 300px;
+            width: 100%;
+            border: 1px solid #ccc;
         }
     </style>
-    <script src="https://unpkg.com/blockly/blockly.min.js"></script>
-    <script src="../libs/scheme.js"></script>
 </head>
 
 <body>
     <h1>Chameleon Mixin Tests</h1>
-    <p>Tests for the chameleon block behavior - blocks should have all connections when floating,
-        lose statement connectors when connected as expression, and vice versa.</p>
-
+    <p>Tests for chameleon block behavior - blocks should adapt connections based on how they're connected.</p>
     <div id="blocklyDiv"></div>
-    <div id="output" class="log"></div>
+    <div id="results"></div>
 
-    <script>
-        // Initialize Blockly workspace
-        const workspace = Blockly.inject('blocklyDiv', {
-            toolbox: {
-                kind: 'categoryToolbox',
-                contents: [
-                    { kind: 'category', name: 'Procedures', colour: 230, contents: [] }
-                ]
+    <script type="module">
+        import { schemeEval } from '../libs/scheme.js';
+
+        const results = document.getElementById('results');
+        let passed = 0;
+        let failed = 0;
+
+        function log(msg, isPass = null) {
+            const div = document.createElement('div');
+            if (isPass === true) {
+                div.className = 'pass';
+                div.textContent = '✅ ' + msg;
+                passed++;
+            } else if (isPass === false) {
+                div.className = 'fail';
+                div.textContent = '❌ ' + msg;
+                failed++;
+            } else {
+                div.textContent = msg;
             }
-        });
+            results.appendChild(div);
+        }
 
-        // Expose for Scheme
-        window.Blockly = Blockly;
+        function assert(condition, testName) {
+            if (condition) {
+                log(`${testName}`, true);
+            } else {
+                log(`${testName}: FAILED`, false);
+            }
+        }
 
-        // Override console.log/error to show in output div
-        const outputDiv = document.getElementById('output');
-        const originalLog = console.log;
-        const originalError = console.error;
+        async function loadSchemeFile(path) {
+            const response = await fetch(path);
+            const code = await response.text();
+            return schemeEval(code);
+        }
 
-        console.log = function (...args) {
-            originalLog.apply(console, args);
-            const line = document.createElement('div');
-            line.className = 'success';
-            line.textContent = args.join(' ');
-            outputDiv.appendChild(line);
+        const toolboxJson = {
+            "kind": "flyoutToolbox",
+            "contents": [
+                { "kind": "block", "type": "procedures_lambda" },
+                { "kind": "block", "type": "procedures_+" }
+            ]
         };
 
-        console.error = function (...args) {
-            originalError.apply(console, args);
-            const line = document.createElement('div');
-            line.className = 'error';
-            line.textContent = args.join(' ');
-            outputDiv.appendChild(line);
-        };
+        async function runTests() {
+            log('=== Chameleon Mixin Tests ===\n');
+
+            // Wait for Blockly to be ready
+            if (typeof Blockly === 'undefined') {
+                log('Waiting for Blockly to load...');
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+
+            // Initialize global Scheme generator required by procedures.scm
+            window.schemeCodeGenerator = new Blockly.Generator('Scheme');
+
+            try {
+                // Load Scheme files
+                log('Loading mixin.scm...');
+                await loadSchemeFile('../src/utils/mixin.scm');
+                log('Loading mixins.scm...');
+                await loadSchemeFile('../src/blocks/mixins.scm');
+                log('Loading procedures.scm...');
+                await loadSchemeFile('../src/blocks/procedures.scm');
+                log('Loaded successfully.\n');
+
+                // Create workspace
+                const workspace = Blockly.inject('blocklyDiv', {
+                    toolbox: toolboxJson
+                });
+                log('Workspace created.\n');
+
+                // Test 1: Initial state - all connections
+                log('--- Test 1: Initial state ---');
+                const block = workspace.newBlock('procedures_+');
+                block.initSvg();
+                block.render();
+
+                assert(block.hasOutput === true, 'hasOutput flag is true');
+                assert(block.hasPreviousAndNext === true, 'hasPreviousAndNext flag is true');
+                assert(block.outputConnection !== null, 'has outputConnection');
+                assert(block.previousConnection !== null, 'has previousConnection');
+                assert(block.nextConnection !== null, 'has nextConnection');
+
+                // Test 2: setConnections and updateShape exist
+                log('\n--- Test 2: Mixin methods exist ---');
+                assert(typeof block.setConnections === 'function', 'setConnections is a function');
+                assert(typeof block.updateShape === 'function', 'updateShape is a function');
+                assert(typeof block.onchange === 'function', 'onchange is a function');
+
+                // Test 3: Statement mode - removes output
+                log('\n--- Test 3: Statement mode ---');
+                block.hasOutput = false;
+                block.hasPreviousAndNext = true;
+                block.updateShape();
+
+                assert(block.outputConnection === null, 'output removed in statement mode');
+                assert(block.previousConnection !== null, 'previous kept in statement mode');
+                assert(block.nextConnection !== null, 'next kept in statement mode');
+
+                // Test 4: Expression mode - removes prev/next
+                log('\n--- Test 4: Expression mode ---');
+                block.hasOutput = true;
+                block.hasPreviousAndNext = false;
+                block.updateShape();
+
+                assert(block.outputConnection !== null, 'output kept in expression mode');
+                assert(block.previousConnection === null, 'previous removed in expression mode');
+                assert(block.nextConnection === null, 'next removed in expression mode');
+
+                // Test 5: Re-chameleonize - restores all
+                log('\n--- Test 5: Re-chameleonize ---');
+                block.hasOutput = true;
+                block.hasPreviousAndNext = true;
+                block.updateShape();
+
+                assert(block.outputConnection !== null, 'output restored');
+                assert(block.previousConnection !== null, 'previous restored');
+                assert(block.nextConnection !== null, 'next restored');
+
+                // Test 6: Generic call block also has chameleon behavior
+                log('\n--- Test 6: Generic call block ---');
+                const callBlock = workspace.newBlock('procedures_generic_call');
+                callBlock.initSvg();
+                callBlock.render();
+
+                assert(callBlock.hasOutput === true, 'generic call has hasOutput');
+                assert(callBlock.hasPreviousAndNext === true, 'generic call has hasPreviousAndNext');
+                assert(callBlock.outputConnection !== null, 'generic call has output');
+                assert(callBlock.previousConnection !== null, 'generic call has previous');
+                assert(callBlock.nextConnection !== null, 'generic call has next');
+
+                // Test 7: Connection with parent block (statement)
+                log('\n--- Test 7: Real statement connection ---');
+                workspace.clear();
+                const parentBlock = workspace.newBlock('procedures_lambda');
+                parentBlock.initSvg();
+                parentBlock.render();
+
+                const childBlock = workspace.newBlock('procedures_+');
+                childBlock.initSvg();
+                childBlock.render();
+
+                // Connect as statement
+                const stackInput = parentBlock.getInput('STACK');
+                if (stackInput && stackInput.connection && childBlock.previousConnection) {
+                    stackInput.connection.connect(childBlock.previousConnection);
+
+                    // Fire onchange event
+                    const event = new Blockly.Events.BlockDrag(childBlock, true, [childBlock]);
+                    event.type = Blockly.Events.BLOCK_DRAG;
+                    childBlock.onchange(event);
+
+                    assert(childBlock.hasOutput === false, 'hasOutput becomes false when connected as statement');
+                    assert(childBlock.hasPreviousAndNext === true, 'hasPreviousAndNext stays true');
+
+                    // Disconnect and verify re-chameleonize
+                    childBlock.previousConnection.disconnect();
+                    const event2 = new Blockly.Events.BlockDrag(childBlock, false, [childBlock]);
+                    event2.type = Blockly.Events.BLOCK_DRAG;
+                    childBlock.onchange(event2);
+
+                    assert(childBlock.hasOutput === true, 'hasOutput restored after disconnect');
+                    assert(childBlock.hasPreviousAndNext === true, 'hasPreviousAndNext still true');
+                } else {
+                    log('Could not create statement connection for test', false);
+                }
+
+            } catch (e) {
+                log('\n❌ Error: ' + e.message, false);
+                console.error(e);
+            }
+
+            // Summary
+            log('\n=== Summary ===');
+            log(`${passed} passed, ${failed} failed`);
+        }
+
+        // Wait for everything to load
+        setTimeout(runTests, 2000);
     </script>
-
-    <!-- Load Scheme files -->
-    <script type="text/scheme" src="../src/utils/mixin.scm"></script>
-    <script type="text/scheme" src="../src/blocks/mixins.scm"></script>
-    <script type="text/scheme" src="../src/blocks/procedures.scm"></script>
-
-    <!-- Run tests -->
-    <script type="text/scheme" src="chameleon_test.scm"></script>
 </body>
 
 </html>

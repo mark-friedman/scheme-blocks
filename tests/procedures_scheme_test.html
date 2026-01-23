@@ -114,6 +114,14 @@
             console.log('LexicalVariablesPlugin:', window.LexicalVariablesPlugin);
             console.log('standardProcedureToolboxJson:', window.standardProcedureToolboxJson);
 
+            console.log('Window Globals Debug:');
+            console.log('Blockly:', window.Blockly);
+            console.log('LexicalVariablesPlugin:', window.LexicalVariablesPlugin);
+            console.log('standardProcedureToolboxJson:', window.standardProcedureToolboxJson);
+
+            // Initialize global Scheme generator required by procedures.scm
+            window.schemeCodeGenerator = new Blockly.Generator('Scheme');
+
             try {
                 // Load mixins
                 log('Loading mixin.scm...');
